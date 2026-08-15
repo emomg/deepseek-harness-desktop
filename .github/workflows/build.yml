@@ -19,9 +19,6 @@ jobs:
         with:
           targets: x86_64-pc-windows-msvc
 
-      - name: Install NSIS
-        run: choco install nsis -y --no-progress
-
       - name: Build release
         working-directory: src-tauri
         run: cargo build --release
@@ -31,7 +28,12 @@ jobs:
         run: |
           New-Item -ItemType Directory -Force installer\build
           Copy-Item src-tauri\target\release\dsh-desktop.exe installer\build\
-          makensis installer\installer.nsi
+          $nsisZip = "$env:TEMP\nsis.zip"
+          Invoke-WebRequest -Uri "https://github.com/tauri-apps/binary-releases/releases/download/nsis-3/nsis-3.zip" -OutFile $nsisZip
+          Expand-Archive $nsisZip -DestinationPath "$env:TEMP\nsis" -Force
+          $makensis = Get-ChildItem "$env:TEMP\nsis" -Recurse -Filter "makensis.exe" | Select-Object -First 1
+          if (-not $makensis) { throw "makensis not found after NSIS extraction" }
+          & $makensis.FullName installer\installer.nsi
 
       - name: Upload installer artifact
         uses: actions/upload-artifact@v4
