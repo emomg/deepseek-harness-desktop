@@ -37,6 +37,12 @@ DeepSeek Harness 是深度求索（DeepSeek）出品的 AI 编程助手平台。
 **问：双击安装包没反应？**
 答：先确认下载完整（`-full` 版约 100MB）。如果浏览器提示"不安全"，选择"保留"即可；安装包是开源的，源码在本仓库。
 
+**问：提示找不到 WebView2Loader.dll 或无法打开窗口？**
+答：安装包已自带 WebView2Loader.dll，并会在缺少 WebView2 运行时（Windows 内置的网页内核）时自动静默安装。如果仍提示，可手动安装 WebView2 运行时：https://developer.microsoft.com/microsoft-edge/webview2/
+
+**问：应用打不开，提示"拒绝访问"或闪退？**
+答：若安装目录旁生成了 `dsh-desktop-panic.log`，请把该文件内容发到 Issues：https://github.com/emomg/deepseek-harness-desktop/issues，会有人帮你排查。
+
 **问：需要管理员权限吗？**
 答：不需要。安装在自己账户的目录下（`%LOCALAPPDATA%\Programs\DeepSeek Harness`）。
 

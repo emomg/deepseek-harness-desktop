@@ -147,6 +147,16 @@ fn spawn_dsh() -> Option<Child> {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    // 崩溃日志写到 exe 同目录，便于用户上报（见 start.md 常见问题）
+    std::panic::set_hook(Box::new(|info| {
+        let msg = format!("PANIC: {}\n", info);
+        let log_path = std::env::current_exe()
+            .ok()
+            .map(|p| p.with_file_name("dsh-desktop-panic.log"))
+            .unwrap_or_else(|| std::path::PathBuf::from("dsh-desktop-panic.log"));
+        let _ = std::fs::write(log_path, msg.as_bytes());
+        let _ = std::io::Write::write_all(&mut std::io::stderr(), msg.as_bytes());
+    }));
     let app = tauri::Builder::default()
         .setup(|app| {
             let child = if port_alive() { None } else { spawn_dsh() };
