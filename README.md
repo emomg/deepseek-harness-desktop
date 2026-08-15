@@ -1,33 +1,38 @@
 # DeepSeek Harness Desktop
 
-基于 **Tauri 2 + Rust** 构建的 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) 原生 Windows 桌面客户端（黑鲸鱼图标）。
+基于 **Tauri 2 + Rust** 构建的 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) 原生 Windows 桌面客户端。
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg) ![CI](https://github.com/emomg/deepseek-harness-desktop/actions/workflows/build.yml/badge.svg)
 
 ## 功能
 
 - 🪟 独立原生窗口（WebView2 内核），加载 DSH Web UI（`http://127.0.0.1:3080`）
-- 🚀 自动启动：如果 dsh 服务没在运行，桌面端会自动拉起 `dsh web` 并等待就绪
-- 🔄 复用已有服务：如果 3080 端口已有 dsh 实例，直接连接，不会重复启动
-- 🧭 系统托盘：常驻托盘图标，点击/左键恢复窗口
+- 🚀 自动启动：dsh 服务未运行时，桌面端自动拉起 `dsh web` 并等待就绪
+- 🔄 复用已有服务：3080 端口已有 dsh 实例时直接连接，不会重复启动
+- 🧭 系统托盘：常驻托盘图标，左键点击恢复窗口
 - 🚫 关闭窗口 = 隐藏到托盘（不退出）；托盘菜单「退出」才真正退出
-- 💬 未找到 dsh 时弹出中文提示，引导安装，不再无响应等待
+- 💬 未找到 dsh 时弹出提示并引导安装，不再无响应等待
 
 ## 安装
 
-从 [Releases](releases) 页面下载 `DeepSeek-Harness-Desktop-Setup-<版本>.exe`，双击安装即可。
+从 [Releases](releases) 页面下载 `DeepSeek-Harness-Desktop-Setup-<版本>.exe`，双击安装即可（每用户安装，无需管理员权限）。
 
-> **前提**：桌面端是 DSH 的"壳"，需要先安装 dsh 命令行工具（Node.js ≥ 18）：
+### 使用前提
+
+桌面端是 DSH 的"壳"，使用前需安装 dsh 命令行工具：
 
 ```bash
 npm install -g @deepseek-ai/dsh
 ```
 
+- 操作系统：Windows 10/11（自带 WebView2，无需额外运行时）
+- 运行时：Node.js ≥ 18
+
 应用启动时会自动查找并启动 dsh：优先使用 PATH 中的 `dsh`，否则回退到 npm 全局安装的 `@deepseek-ai/dsh`。
 
 ## 从源码构建
 
-需要 [Rust](https://www.rust-lang.org/)（stable，MSVC 或 GNU 工具链均可）与 Windows 10/11（自带 WebView2）。
+需要 [Rust](https://www.rust-lang.org/)（stable，MSVC 或 GNU 工具链均可）与 Windows 10/11。
 
 ```powershell
 cd src-tauri
@@ -47,7 +52,7 @@ makensis installer\installer.nsi
 # 产物: installer\DeepSeek-Harness-Desktop-Setup-<版本>.exe
 ```
 
-安装包为**每用户安装**（`%LOCALAPPDATA%\Programs\DeepSeek Harness`），无需管理员权限，包含开始菜单/桌面快捷方式与卸载程序。
+安装包为**每用户安装**（`%LOCALAPPDATA%\Programs\DeepSeek Harness`），包含开始菜单/桌面快捷方式与卸载程序。
 
 ## 工程结构
 
@@ -65,11 +70,19 @@ makensis installer\installer.nsi
 └── .github\workflows\       # CI：构建 + 打包 + 发布 Release
 ```
 
-## 隐私说明
+## 隐私与数据
 
-- 本应用完全**本地运行**，不收集、不上传任何数据。
-- 聊天记录、API Key、配置等全部保存在用户本机 `~/.dsh` 目录（`sessions/`、`.credentials.yaml` 等），**不随仓库或安装包分发**。
+- 本应用完全**本地运行**，不收集、不上传任何数据，无任何遥测。
+- 聊天记录、API Key、配置等数据全部保存在**用户本机**的 `~/.dsh` 目录（如 `sessions/`、`.credentials.yaml` 等），**绝不随仓库或安装包分发**。
 - 本仓库不含任何用户数据、密钥或机器相关路径。
+- 卸载程序只移除应用本体，**不会删除** `~/.dsh` 中的数据；如需清除数据请手动删除该目录。
+
+## 常见问题
+
+- **提示"未找到 dsh"**：执行 `npm install -g @deepseek-ai/dsh` 后重新启动应用。
+- **3080 端口已被占用**：应用会直接复用已有 dsh 实例，不会重复启动。
+- **关闭窗口后应用还在**：这是设计行为——窗口关闭即最小化到系统托盘，请从托盘菜单「退出」彻底退出。
+- **安装后无法打开**：确认系统为 Windows 10/11 且已安装 WebView2 运行时（Win10/11 一般自带）。
 
 ## 许可
 
