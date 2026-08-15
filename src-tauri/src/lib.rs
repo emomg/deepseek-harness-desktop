@@ -13,6 +13,130 @@ const DSH_URL: &str = "http://127.0.0.1:3080";
 const DSH_ADDR: &str = "127.0.0.1:3080";
 const CREATE_NO_WINDOW: u32 = 0x0800_0000;
 
+/// 桌面版自身的 GitHub 仓库（更新检查来源，同时用于 API 与下载页）。
+const UPDATE_REPO: &str = "emomg/deepseek-harness-desktop";
+/// GitHub API 最新 release 端点。
+const UPDATE_API_URL: &str =
+    "https://api.github.com/repos/emomg/deepseek-harness-desktop/releases/latest";
+/// 人工下载页（无 API 可用时的兜底链接）。
+const UPDATE_PAGE_URL: &str = "https://github.com/emomg/deepseek-harness-desktop/releases/latest";
+
+/// 更新检查的仓库名（日志/诊断用，避免常量未使用告警）。
+fn update_repo_label() -> &'static str {
+    UPDATE_REPO
+}
+
+/// 当前桌面壳版本（Cargo.toml 的 version）。
+const APP_VERSION: &str = env!("CARGO_PKG_VERSION");
+
+/// 用捆绑/系统的 node 跑一小段 fetch 脚本，取 GitHub 最新 release 的 tag 和页面。
+/// 返回 (tag, html_url)；任何一步失败返回 None（网络不可用、node 缺失等，均静默）。
+fn fetch_latest_release() -> Option<(String, String)> {
+    // 优先捆绑运行时里的 node（-full 版），其次 PATH/Program Files 里的 node。
+    let node = bundled_runtime()
+        .map(|(n, _)| n)
+        .or_else(find_node)?;
+    let script = format!(
+        r#"const r = await fetch('{api}', {{
+  headers: {{ 'User-Agent': 'dsh-desktop-update-check', 'Accept': 'application/vnd.github+json' }}
+}});
+if (!r.ok) process.exit(2);
+const j = await r.json();
+console.log(j.tag_name || '');
+console.log(j.html_url || '');
+"#,
+        api = UPDATE_API_URL
+    );
+    let out = Command::new(&node).args(["-e", &script]).output().ok()?;
+    eprintln!("[dsh-desktop] checking updates for {}", update_repo_label());
+    if !out.status.success() {
+        return None;
+    }
+    let text = String::from_utf8_lossy(&out.stdout);
+    let mut lines = text.lines();
+    let tag = lines.next()?.trim().to_string();
+    let url = lines.next()?.trim().to_string();
+    if tag.is_empty() {
+        return None;
+    }
+    Some((tag, if url.is_empty() { UPDATE_PAGE_URL.to_string() } else { url }))
+}
+
+/// 解析 "v0.1.1" / "0.1.1" 为 (0,1,1)；解析失败返回 None。
+fn parse_version(v: &str) -> Option<(u32, u32, u32)> {
+    let v = v.trim_start_matches('v');
+    let mut it = v.split('.');
+    let major = it.next()?.parse().ok()?;
+    let minor = it.next()?.parse().ok()?;
+    let patch = it.next()?.parse().ok()?;
+    Some((major, minor, patch))
+}
+
+/// 远程 tag 是否严格新于当前版本（按 semver 比较，忽略预发布段差异）。
+fn is_newer(tag: &str, current: &str) -> bool {
+    match (parse_version(tag), parse_version(current)) {
+        (Some(r), Some(c)) => r > c,
+        _ => false,
+    }
+}
+
+#[cfg(windows)]
+fn show_update_dialog(title: &str, message: &str) {
+    use windows_sys::Win32::UI::WindowsAndMessaging::{MessageBoxW, MB_ICONINFORMATION, MB_OK};
+
+    fn wide(s: &str) -> Vec<u16> {
+        s.encode_utf16().chain(std::iter::once(0)).collect()
+    }
+    let t = wide(title);
+    let m = wide(message);
+    unsafe {
+        MessageBoxW(std::ptr::null_mut(), m.as_ptr(), t.as_ptr(), MB_OK | MB_ICONINFORMATION);
+    }
+}
+
+/// 打开浏览器访问某个 URL（用系统默认浏览器）。
+#[cfg(windows)]
+fn open_url(url: &str) {
+    let _ = Command::new("cmd")
+        .args(["/c", "start", "", url])
+        .creation_flags(CREATE_NO_WINDOW)
+        .spawn();
+}
+
+/// 执行一次完整检查：拉取最新 release，比较版本，按结果弹窗。
+/// 在线程里调用（不阻塞 UI）。
+#[cfg(windows)]
+fn run_update_check() {
+    let current = APP_VERSION.to_string();
+    match fetch_latest_release() {
+        None => {
+            show_update_dialog(
+                "检查更新",
+                &format!(
+                    "无法连接 GitHub 检查更新（网络不可用或 node 缺失）。
+
+当前版本：v{current}
+可手动访问：
+{UPDATE_PAGE_URL}"
+                ),
+            );
+        }
+        Some((tag, url)) => {
+            if is_newer(&tag, &current) {
+                let msg = format!(
+                    "发现新版本 v{tag}（当前 v{current}）。
+
+是否前往下载页下载更新？"
+                );
+                show_update_dialog("发现新版本", &msg);
+                open_url(&url);
+            } else {
+                show_update_dialog("检查更新", &format!("当前已是最新版本 v{current}。"));
+            }
+        }
+    }
+}
+
 /// 桌面端自己拉起的 dsh 子进程；如果端口本来就活着则不拉起，也不负责杀掉。
 struct DshServer(Mutex<Option<Child>>);
 
@@ -211,7 +335,34 @@ pub fn run() {
                 show_dsh_not_ready_dialog();
             }
 
-            // 托盘：显示窗口 / 退出
+            // 启动后静默检查一次桌面版更新（后台线程，不阻塞；有新版本才提示）
+            {
+                std::thread::spawn(move || {
+                    std::thread::sleep(Duration::from_secs(5));
+                    let current = APP_VERSION.to_string();
+                    if let Some((tag, url)) = fetch_latest_release() {
+                        if is_newer(&tag, &current) {
+                            let msg = format!(
+                                "发现新版本 v{tag}（当前 v{current}）。
+
+是否前往下载页下载更新？"
+                            );
+                            show_update_dialog("发现新版本", &msg);
+                            open_url(&url);
+                        }
+                    }
+                });
+            }
+
+            // 托盘：检查更新 / 显示窗口 / 退出
+            let update_item = match MenuItem::with_id(app, "update-check", "检查更新", true, None::<&str>)
+            {
+                Ok(i) => i,
+                Err(e) => {
+                    eprintln!("[dsh-desktop] menu item failed: {e:?}");
+                    return Err(e.into());
+                }
+            };
             let show_item = match MenuItem::with_id(app, "show", "显示主窗口", true, None::<&str>)
             {
                 Ok(i) => i,
@@ -227,7 +378,7 @@ pub fn run() {
                     return Err(e.into());
                 }
             };
-            let menu = match Menu::with_items(app, &[&show_item, &quit_item]) {
+            let menu = match Menu::with_items(app, &[&update_item, &show_item, &quit_item]) {
                 Ok(m) => m,
                 Err(e) => {
                     eprintln!("[dsh-desktop] menu failed: {e:?}");
@@ -243,6 +394,9 @@ pub fn run() {
                 .tooltip("DeepSeek Harness")
                 .menu(&menu)
                 .on_menu_event(|app, event| match event.id.as_ref() {
+                    "update-check" => {
+                        std::thread::spawn(run_update_check);
+                    }
                     "show" => {
                         if let Some(w) = app.get_webview_window("main") {
                             let _ = w.show();
