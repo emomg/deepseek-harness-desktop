@@ -257,6 +257,7 @@ fn spawn_dsh() -> Option<Child> {
         if let Ok(child) = Command::new(&node)
             .arg(&bin_js)
             .arg("web")
+            .env("DSH_DESKTOP_VERSION", env!("CARGO_PKG_VERSION"))
             .creation_flags(CREATE_NO_WINDOW)
             .spawn()
         {
@@ -267,6 +268,7 @@ fn spawn_dsh() -> Option<Child> {
     if find_on_path("dsh").is_some() {
         if let Ok(child) = Command::new("cmd")
             .args(["/c", "dsh", "web"])
+            .env("DSH_DESKTOP_VERSION", env!("CARGO_PKG_VERSION"))
             .creation_flags(CREATE_NO_WINDOW)
             .spawn()
         {
@@ -278,6 +280,7 @@ fn spawn_dsh() -> Option<Child> {
         if let Ok(child) = Command::new(&node)
             .arg(&bin_js)
             .arg("web")
+            .env("DSH_DESKTOP_VERSION", env!("CARGO_PKG_VERSION"))
             .creation_flags(CREATE_NO_WINDOW)
             .spawn()
         {
