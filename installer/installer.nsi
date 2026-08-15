@@ -3,6 +3,9 @@ Unicode true
 !include "MUI2.nsh"
 !include "LogicLib.nsh"
 !include "StrFunc.nsh"
+${Using:StrFunc} StrStr
+${Using:StrFunc} StrRep
+${Using:StrFunc} UnStrRep
 
 !define APP_NAME "DeepSeek Harness"
 !define APP_EXE "dsh-desktop.exe"
@@ -123,8 +126,8 @@ Section "Uninstall"
   !ifdef RUNTIME_DIR
     ReadRegStr $1 HKCU "Environment" "Path"
     StrCmp $1 "" path_cleanup_done
-    ${StrRep} $1 $1 ";$INSTDIR\runtime" ""
-    ${StrRep} $1 $1 "$INSTDIR\runtime;" ""
+    ${UnStrRep} $1 $1 ";$INSTDIR\runtime" ""
+    ${UnStrRep} $1 $1 "$INSTDIR\runtime;" ""
     WriteRegExpandStr HKCU "Environment" "Path" "$1"
     System::Call 'user32.dll::SendMessageTimeoutW(i 0xFFFF, i 0x001A, i 0, w "Environment", i 0x0002, i 5000, *i r0)'
   path_cleanup_done:
