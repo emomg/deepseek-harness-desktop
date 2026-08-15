@@ -1,0 +1,33 @@
+# ---- Rust / Cargo ----
+src-tauri/target/
+src-tauri/vendor/
+src-tauri/.cargo/
+src-tauri/gen/
+
+# ---- 二进制与构建产物（发布走 GitHub Releases）----
+*.exe
+installer/build/
+installer/*-Setup-*.exe
+installer/nsis/
+installer/nsis-*.zip
+
+# ---- Node ----
+node_modules/
+
+# ---- DSH 用户数据：含聊天记录、API Key 等敏感信息，绝不入库 ----
+.dsh/
+**/.dsh/
+sessions/
+.credentials.yaml
+settings.yaml
+.anonymous-user-id
+storages/
+**/storages/
+
+# ---- 系统 / 编辑器 ----
+Thumbs.db
+Desktop.ini
+.DS_Store
+*.log
+.idea/
+.vscode/
