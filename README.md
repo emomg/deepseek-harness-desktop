@@ -15,6 +15,8 @@
 
 ## 安装
 
+> 👶 **新手请看**：[一步一步安装指南（start.md）](start.md)
+
 从 [Releases](releases) 页面下载 `DeepSeek-Harness-Desktop-Setup-<版本>.exe`，双击安装即可（每用户安装，无需管理员权限）。
 
 ### 使用前提
