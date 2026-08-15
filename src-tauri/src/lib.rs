@@ -107,6 +107,26 @@ fn show_dsh_missing_dialog() {
     }
 }
 
+#[cfg(windows)]
+fn show_dsh_not_ready_dialog() {
+    use windows_sys::Win32::UI::WindowsAndMessaging::{MessageBoxW, MB_ICONWARNING, MB_OK};
+
+    fn wide(s: &str) -> Vec<u16> {
+        s.encode_utf16().chain(std::iter::once(0)).collect()
+    }
+    let title = wide("DeepSeek Harness");
+    let msg = wide(
+        "dsh 服务未能启动（127.0.0.1:3080 无响应）。\n\n\
+         请尝试：\n\
+         1. 在命令行运行 dsh web，看是否报错（桌面端会自动检测并连接）；\n\
+         2. 或安装 -full 自包含版（自带运行时，无需手动配置）。\n\n\
+         如果桌面端已自动拉起服务但启动较慢，请稍后重新打开应用。",
+    );
+    unsafe {
+        MessageBoxW(std::ptr::null_mut(), msg.as_ptr(), title.as_ptr(), MB_OK | MB_ICONWARNING);
+    }
+}
+
 fn spawn_dsh() -> Option<Child> {
     // 0) 安装包自带的捆绑运行时（最优先，小白无需安装任何东西）
     if let Some((node, bin_js)) = bundled_runtime() {
@@ -162,14 +182,11 @@ pub fn run() {
             let child = if port_alive() { None } else { spawn_dsh() };
             app.manage(DshServer(Mutex::new(child)));
 
-            let ready = wait_for_port(Duration::from_secs(60));
-            eprintln!("[dsh-desktop] dsh port ready: {ready}");
-
-            // 主窗口：直接加载 dsh Web UI
+            // 主窗口：先显示本地占位页（"正在启动 DSH 服务…"），避免空白错误页
             let win = match WebviewWindowBuilder::new(
                 app,
                 "main",
-                WebviewUrl::External(DSH_URL.parse().unwrap()),
+                WebviewUrl::App("index.html".into()),
             )
             .title("DeepSeek Harness")
             .inner_size(1280.0, 820.0)
@@ -184,6 +201,15 @@ pub fn run() {
             };
             let _ = win.show();
             let _ = win.set_focus();
+
+            // 等待 dsh 服务就绪（首次启动可能较慢），就绪后跳转到 Web UI
+            let ready = wait_for_port(Duration::from_secs(180));
+            eprintln!("[dsh-desktop] dsh port ready: {ready}");
+            if ready {
+                let _ = win.navigate(DSH_URL.parse().unwrap());
+            } else {
+                show_dsh_not_ready_dialog();
+            }
 
             // 托盘：显示窗口 / 退出
             let show_item = match MenuItem::with_id(app, "show", "显示主窗口", true, None::<&str>)
