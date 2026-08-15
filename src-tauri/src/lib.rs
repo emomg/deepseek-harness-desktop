@@ -306,10 +306,9 @@ pub fn run() {
     }));
     let app = tauri::Builder::default()
         .setup(|app| {
-            let child = if port_alive() { None } else { spawn_dsh() };
-            app.manage(DshServer(Mutex::new(child)));
+            app.manage(DshServer(Mutex::new(None)));
 
-            // 主窗口：先显示本地占位页（"正在启动 DSH 服务…"），避免空白错误页
+            // 主窗口立即创建并显示占位页（"正在启动 DSH 服务…"），避免窗口迟迟不出现
             let win = match WebviewWindowBuilder::new(
                 app,
                 "main",
@@ -328,15 +327,28 @@ pub fn run() {
             };
             let _ = win.show();
             let _ = win.set_focus();
+            let main_handle = win.clone();
 
-            // 等待 dsh 服务就绪（首次启动可能较慢），就绪后跳转到 Web UI
-            let ready = wait_for_port(Duration::from_secs(180));
-            eprintln!("[dsh-desktop] dsh port ready: {ready}");
-            if ready {
-                let _ = win.navigate(DSH_URL.parse().unwrap());
-            } else {
-                show_dsh_not_ready_dialog();
-            }
+            // 后台线程拉起 dsh（不阻塞窗口显示）并等待端口就绪
+            let app_handle = app.handle().clone();
+            std::thread::spawn(move || {
+                let child = if port_alive() { None } else { spawn_dsh() };
+                if let Some(state) = app_handle.try_state::<DshServer>() {
+                    if let Ok(mut guard) = state.0.lock() {
+                        *guard = child;
+                    }
+                }
+                let ready = wait_for_port(Duration::from_secs(180));
+                eprintln!("[dsh-desktop] dsh port ready: {ready}");
+                let nav = main_handle.clone();
+                let _ = app_handle.run_on_main_thread(move || {
+                    if ready {
+                        let _ = nav.navigate(DSH_URL.parse().unwrap());
+                    } else {
+                        show_dsh_not_ready_dialog();
+                    }
+                });
+            });
 
             // 启动后静默检查一次桌面版更新（后台线程，不阻塞；有新版本才提示）
             {
