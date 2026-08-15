@@ -17,7 +17,7 @@
 
 > 👶 **新手请看**：[一步一步安装指南（start.md）](start.md)
 
-从 [Releases](releases) 页面下载安装包，双击安装即可（每用户安装，无需管理员权限）：
+从 [Releases](https://github.com/emomg/deepseek-harness-desktop/releases) 页面下载安装包，双击安装即可（每用户安装，无需管理员权限）：
 
 | 安装包 | 大小 | 适用人群 |
 |---|---|---|
