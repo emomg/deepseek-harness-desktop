@@ -17,20 +17,15 @@
 
 > 👶 **新手请看**：[一步一步安装指南（start.md）](start.md)
 
-从 [Releases](releases) 页面下载 `DeepSeek-Harness-Desktop-Setup-<版本>.exe`，双击安装即可（每用户安装，无需管理员权限）。
+从 [Releases](releases) 页面下载安装包，双击安装即可（每用户安装，无需管理员权限）：
 
-### 使用前提
-
-桌面端是 DSH 的"壳"，使用前需安装 dsh 命令行工具：
-
-```bash
-npm install -g @deepseek-ai/dsh
-```
+| 安装包 | 大小 | 适用人群 |
+|---|---|---|
+| `DeepSeek-Harness-Desktop-Setup-0.1.0-full.exe` | ~100MB | **小白/普通用户（推荐）**：自带 Node.js 与 dsh 运行时，无需任何预装 |
+| `DeepSeek-Harness-Desktop-Setup-0.1.0.exe` | ~2MB | 开发者：需自装 Node.js ≥ 18 与 `npm install -g @deepseek-ai/dsh` |
 
 - 操作系统：Windows 10/11（自带 WebView2，无需额外运行时）
-- 运行时：Node.js ≥ 18
-
-应用启动时会自动查找并启动 dsh：优先使用 PATH 中的 `dsh`，否则回退到 npm 全局安装的 `@deepseek-ai/dsh`。
+- 应用启动时自动查找并启动 dsh：优先使用安装包自带的捆绑运行时，其次 PATH 中的 `dsh`，最后回退到 npm 全局安装的 `@deepseek-ai/dsh`。
 
 ## 从源码构建
 

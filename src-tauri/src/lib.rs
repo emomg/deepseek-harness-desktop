@@ -76,6 +76,21 @@ fn find_global_dsh_bin() -> Option<PathBuf> {
     bin.is_file().then_some(bin)
 }
 
+/// 安装包自带的捆绑运行时（exe 同级目录 runtime\），小白无需预装 Node/dsh。
+fn bundled_runtime() -> Option<(PathBuf, PathBuf)> {
+    let exe = std::env::current_exe().ok()?;
+    let dir = exe.parent()?;
+    let node = dir.join("runtime").join("node.exe");
+    let bin_js = dir
+        .join("runtime")
+        .join("node_modules")
+        .join("@deepseek-ai")
+        .join("dsh")
+        .join("lib")
+        .join("bin.js");
+    (node.is_file() && bin_js.is_file()).then_some((node, bin_js))
+}
+
 #[cfg(windows)]
 fn show_dsh_missing_dialog() {
     use windows_sys::Win32::UI::WindowsAndMessaging::{MessageBoxW, MB_ICONWARNING, MB_OK};
@@ -93,6 +108,17 @@ fn show_dsh_missing_dialog() {
 }
 
 fn spawn_dsh() -> Option<Child> {
+    // 0) 安装包自带的捆绑运行时（最优先，小白无需安装任何东西）
+    if let Some((node, bin_js)) = bundled_runtime() {
+        if let Ok(child) = Command::new(&node)
+            .arg(&bin_js)
+            .arg("web")
+            .creation_flags(CREATE_NO_WINDOW)
+            .spawn()
+        {
+            return Some(child);
+        }
+    }
     // 1) PATH 中的 dsh shim（npm 全局安装，.cmd 需要 cmd 壳）
     if find_on_path("dsh").is_some() {
         if let Ok(child) = Command::new("cmd")

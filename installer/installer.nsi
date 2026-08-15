@@ -9,7 +9,10 @@ Unicode true
 !define INST_DIR "$LOCALAPPDATA\Programs\DeepSeek Harness"
 
 Name "${APP_NAME}"
-OutFile "DeepSeek-Harness-Desktop-Setup-${APP_VERSION}.exe"
+!ifndef SETUP_NAME
+  !define SETUP_NAME "DeepSeek-Harness-Desktop-Setup-${APP_VERSION}.exe"
+!endif
+OutFile "${SETUP_NAME}"
 InstallDir "${INST_DIR}"
 RequestExecutionLevel user
 VIProductVersion "0.1.0.0"
@@ -39,6 +42,11 @@ VIAddVersionKey /LANG=2052 "LegalCopyright" "Copyright (c) 2026 DeepSeek (MIT)"
 Section "主程序" SecMain
   SetOutPath "$INSTDIR"
   File "build\${APP_EXE}"
+  ; 自包含安装包：把 Node.js + dsh 运行时一并装入（makensis -DRUNTIME_DIR=... 时启用）
+  !ifdef RUNTIME_DIR
+    SetOutPath "$INSTDIR\runtime"
+    File /r "${RUNTIME_DIR}\*.*"
+  !endif
   WriteUninstaller "$INSTDIR\Uninstall.exe"
   CreateDirectory "$SMPROGRAMS\DeepSeek Harness"
   CreateShortcut "$SMPROGRAMS\DeepSeek Harness\DeepSeek Harness.lnk" "$INSTDIR\${APP_EXE}"
@@ -57,6 +65,7 @@ SectionEnd
 Section "Uninstall"
   Delete "$INSTDIR\${APP_EXE}"
   Delete "$INSTDIR\Uninstall.exe"
+  RMDir /r "$INSTDIR\runtime"
   RMDir "$INSTDIR"
   Delete "$SMPROGRAMS\DeepSeek Harness\DeepSeek Harness.lnk"
   Delete "$SMPROGRAMS\DeepSeek Harness\卸载 DeepSeek Harness.lnk"
