@@ -27,6 +27,7 @@
 - 操作系统：Windows 10/11（自带 WebView2，无需额外运行时）
 - 应用启动时自动查找并启动 dsh：优先使用安装包自带的捆绑运行时，其次 PATH 中的 `dsh`，最后回退到 npm 全局安装的 `@deepseek-ai/dsh`。
 - `-full` 版内置完整 Node.js（含 npm/npx），安装时可勾选「添加到 PATH」以便在命令行使用；若系统已有 Node.js 则自动跳过，不会覆盖或冲突。
+- **关于 pnpm**：`-full` 版内置 Node.js 与 dsh 运行时，但**不含 pnpm**。Web UI 左下角的「检查更新」（来自 `@captain1275/dsh-remote-web-ui` 插件）依赖 `pnpm` 命令来更新插件；若系统中没有 pnpm（`pnpm --version` 报错），该按钮会提示「未找到 pnpm」。需要此功能时，安装 `-full` 版并在「将内置 Node.js 添加到 PATH」打勾，然后执行 `npm install -g pnpm`；或使用精简版并自装 Node.js ≥ 18 与 pnpm（`npm install -g pnpm` 或 `corepack enable`）。
 
 ## 从源码构建
 
@@ -78,6 +79,7 @@ makensis installer\installer.nsi
 ## 常见问题
 
 - **提示"未找到 dsh"**：执行 `npm install -g @deepseek-ai/dsh` 后重新启动应用。
+- **Web UI 左下角「检查更新」提示"未找到 pnpm"**：该按钮由插件 `@captain1275/dsh-remote-web-ui` 提供，更新插件依赖 `pnpm` 命令。若 `pnpm --version` 不可用：`-full` 版请勾选「将内置 Node.js 添加到 PATH」后运行 `npm install -g pnpm`；精简版请先安装 Node.js ≥ 18 再运行 `npm install -g pnpm`（或 `corepack enable`）。安装 pnpm 后重启 dsh web 即可正常检查/更新。
 - **3080 端口已被占用**：应用会直接复用已有 dsh 实例，不会重复启动。
 - **关闭窗口后应用还在**：这是设计行为——窗口关闭即最小化到系统托盘，请从托盘菜单「退出」彻底退出。
 - **安装后无法打开**：确认系统为 Windows 10/11 且已安装 WebView2 运行时（Win10/11 一般自带）。
