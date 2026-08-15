@@ -1,6 +1,8 @@
 ﻿; DeepSeek Harness Desktop - Windows 安装脚本 (NSIS 3)
 Unicode true
 !include "MUI2.nsh"
+!include "LogicLib.nsh"
+!include "StrFunc.nsh"
 
 !define APP_NAME "DeepSeek Harness"
 !define APP_EXE "dsh-desktop.exe"
@@ -27,6 +29,9 @@ VIAddVersionKey /LANG=2052 "LegalCopyright" "Copyright (c) 2026 DeepSeek (MIT)"
 !define MUI_ABORTWARNING
 
 !insertmacro MUI_PAGE_WELCOME
+!ifdef RUNTIME_DIR
+  !insertmacro MUI_PAGE_COMPONENTS
+!endif
 !insertmacro MUI_PAGE_DIRECTORY
 !insertmacro MUI_PAGE_INSTFILES
 !define MUI_FINISHPAGE_RUN "$INSTDIR\${APP_EXE}"
@@ -40,6 +45,7 @@ VIAddVersionKey /LANG=2052 "LegalCopyright" "Copyright (c) 2026 DeepSeek (MIT)"
 !insertmacro MUI_LANGUAGE "English"
 
 Section "主程序" SecMain
+  SectionIn RO
   SetOutPath "$INSTDIR"
   File "build\${APP_EXE}"
   ; WebView2Loader.dll（GNU 工具链构建的动态依赖，必须与 exe 同目录）
@@ -82,7 +88,47 @@ webview2_ok:
   WriteRegDWORD HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APP_ID}" "NoRepair" 1
 SectionEnd
 
+!ifdef RUNTIME_DIR
+Section "将内置 Node.js 添加到 PATH（可选，推荐）" SecNodePath
+  SectionIn 1
+  ; 系统已有 node 则跳过，避免影响用户已有环境
+  nsExec::ExecToStack 'where node'
+  Pop $0
+  Pop $1
+  StrCmp $0 "0" node_existing
+  ReadRegStr $2 HKCU "Environment" "Path"
+  ${StrStr} $3 $2 "$INSTDIR\runtime"
+  StrCmp $3 "" node_add
+  DetailPrint "用户 PATH 已包含内置 Node.js 目录"
+  Goto node_done
+node_add:
+  StrCmp $2 "" node_path_new
+  StrCpy $2 "$2;$INSTDIR\runtime"
+  Goto node_write
+node_path_new:
+  StrCpy $2 "$INSTDIR\runtime"
+node_write:
+  WriteRegExpandStr HKCU "Environment" "Path" "$2"
+  DetailPrint "已将内置 Node.js 目录添加到用户 PATH（$INSTDIR\runtime）"
+  System::Call 'user32.dll::SendMessageTimeoutW(i 0xFFFF, i 0x001A, i 0, w "Environment", i 0x0002, i 5000, *i r0)'
+  Goto node_done
+node_existing:
+  DetailPrint "检测到系统已有 Node.js，跳过 PATH 配置（避免冲突）"
+node_done:
+SectionEnd
+!endif
+
 Section "Uninstall"
+  ; 从用户 PATH 中移除内置 Node.js 目录（仅 -full 自包含版添加过）
+  !ifdef RUNTIME_DIR
+    ReadRegStr $1 HKCU "Environment" "Path"
+    StrCmp $1 "" path_cleanup_done
+    ${StrRep} $1 $1 ";$INSTDIR\runtime" ""
+    ${StrRep} $1 $1 "$INSTDIR\runtime;" ""
+    WriteRegExpandStr HKCU "Environment" "Path" "$1"
+    System::Call 'user32.dll::SendMessageTimeoutW(i 0xFFFF, i 0x001A, i 0, w "Environment", i 0x0002, i 5000, *i r0)'
+  path_cleanup_done:
+  !endif
   Delete "$INSTDIR\${APP_EXE}"
   Delete "$INSTDIR\WebView2Loader.dll"
   Delete "$INSTDIR\MicrosoftEdgewebview2Setup.exe"
