@@ -15,7 +15,8 @@
 | 版本 | 安装包 | 说明 |
 |---|---|---|
 | **正式版 v0.1.0** `v0.1.0` | [Setup-0.1.0-full.exe](https://github.com/emomg/deepseek-harness-desktop/releases/tag/v0.1.0)（约 100MB）<br>[Setup-0.1.0.exe](https://github.com/emomg/deepseek-harness-desktop/releases/tag/v0.1.0)（约 4MB） | **两个安装包都提供**：full 版自带 Node/dsh 运行时免预装；精简版需本机 Node ≥ 18 |
-| **专业版 v0.1.0（测试版）** `v0.1.0-pro-test` | [Setup-0.1.0-pro-test.exe](https://github.com/emomg/deepseek-harness-desktop/releases/tag/v0.1.0-pro-test)（约 4MB）<br>[插件包 zip](https://github.com/emomg/deepseek-harness-desktop/releases/tag/v0.1.0-pro-test) | 精简安装包（需 Node ≥ 18）；已有 DSH 环境可只装插件 zip |**暂时先别下载专业版**
+| **专业版 v0.1.0（测试版）** `v0.1.0-pro-test` | [Setup-0.1.0-pro-test.exe](https://github.com/emomg/deepseek-harness-desktop/releases/tag/v0.1.0-pro-test)（约 4MB）<br>[插件包 zip](https://github.com/emomg/deepseek-harness-desktop/releases/tag/v0.1.0-pro-test) | 精简安装包（需 Node ≥ 18）；已有 DSH 环境可只装插件 zip |
+**暂时先别下载专业版**
 
 > 小白完整安装指引见 [start.md](start.md)。
 
