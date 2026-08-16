@@ -52,8 +52,8 @@ const ctx = {
 };
 
 plugin.apply(ctx);
-if (routes.length !== 15) {
-  console.error(`FAIL: 期望 15 条路由，实际 ${routes.length}`);
+if (routes.length !== 16) {
+  console.error(`FAIL: 期望 16 条路由，实际 ${routes.length}`);
   process.exit(1);
 }
 console.log(`ok: 注册 ${routes.length} 条 /api/pro/* 路由`);
@@ -206,7 +206,11 @@ check(r.code === 400, "vtree 路径穿越被拒绝");
 r = await call("GET", `/api/pro/vfile?path=${encodeURIComponent(ws)}&version=${uploadVerId}&file=${encodeURIComponent(path.join(ws, "..", "README.md"))}`);
 check(r.code === 400, "vfile 路径穿越被拒绝");
 
-// 14. 总文件区：源管理（git 仓库 + 本地文件夹）
+// 14. 推代码：非 git 仓库优雅报错（配置在第 12 步已设置）
+r = await call("POST", "/api/pro/push", { path: ws, dryRun: true });
+check(r.code === 400 && /git 仓库|git init/.test(r.data.error ?? ""), `非 git 目录推代码优雅报错（${r.data.error}）`);
+
+// 15. 总文件区：源管理（git 仓库 + 本地文件夹）
 r = await call("GET", "/api/pro/sources");
 check(r.code === 200 && Array.isArray(r.data.sources) && r.data.sources.length === 0, "初始无源");
 const folder = path.join(tmp, "folder-src");

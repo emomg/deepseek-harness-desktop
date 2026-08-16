@@ -165,9 +165,6 @@ export function apply(ctx) {
     });
   }
 
-  // ---- GitHub 上传配置（token 仅本地存储，接口永不回传明文） ----
-  const configFile = path.join(v.dataDir(), "config.json");
-  let ghConfig = { token: "", repo: "" };
   async function loadConfig() {
     try {
       const raw = JSON.parse(await fs.readFile(configFile, "utf8"));
@@ -206,7 +203,117 @@ export function apply(ctx) {
     });
   }
 
-  /** 创建 GitHub release（测试版 prerelease）并上传 zip。 */
+  /** 推代码时默认排查的敏感信息模式（追加到项目 .git/info/exclude，仅本地生效，不入仓库）。 */
+const SENSITIVE_PATTERNS = [
+  ".env",
+  ".env.*",
+  "*.pem",
+  "*.key",
+  "*.p12",
+  "*.pfx",
+  "*.p8",
+  "id_rsa*",
+  "id_ed25519*",
+  ".credentials.yaml",
+  "credentials.json",
+  "credentials.txt",
+  "*credentials*",
+  "*secret*",
+  "*secrets*",
+  "*.token",
+  ".npmrc",
+  ".pypirc",
+  ".netrc",
+  "*.local.json",
+  "config.local.*",
+  "application-local.*",
+  ".p12",
+  ".keystore",
+];
+
+// ---- GitHub 上传配置（token 仅本地存储，接口永不回传明文；模块级，供 pushCode 使用） ----
+const configFile = path.join(v.dataDir(), "config.json");
+let ghConfig = { token: "", repo: "" };
+
+/** 执行外部命令（尽力而为；沙箱禁 spawn 时返回错误而非崩溃）。 */
+function runExec(cmd, args, opts) {
+  return new Promise((resolve) => {
+    let exec;
+    try {
+      exec = execFile;
+    } catch {
+      resolve({ ok: false, error: "命令执行不可用（沙箱限制 spawn）" });
+      return;
+    }
+    try {
+      exec(cmd, args, { timeout: (opts?.timeout ?? 60000), cwd: opts?.cwd, env: opts?.env }, (err, so, se) => {
+        if (err) resolve({ ok: false, error: String(se || err.message).trim() || `${cmd} 失败`, out: String(so ?? "") });
+        else resolve({ ok: true, out: String(so ?? "").trim() });
+      });
+    } catch (e) {
+      resolve({ ok: false, error: String(e?.message ?? e) });
+    }
+  });
+}
+
+/** 把敏感模式追加到项目 .git/info/exclude（已存在则跳过），保证 git add -A 默认不纳入。 */
+async function ensureSensitiveExcludes(repoRoot) {
+  const infoDir = path.join(repoRoot, ".git", "info");
+  const excludeFile = path.join(infoDir, "exclude");
+  let existing = "";
+  try {
+    existing = await fs.readFile(excludeFile, "utf8");
+  } catch {
+    /* new file */
+  }
+  const header = "# dsh-pro: 敏感信息默认排除（本地，不入仓库）";
+  let lines = existing.split(/\r?\n/);
+  if (!lines.includes(header)) {
+    lines = [...lines.filter((l) => l.length), header, ...SENSITIVE_PATTERNS];
+    await fs.mkdir(infoDir, { recursive: true });
+    await fs.writeFile(excludeFile, lines.join("\n"), "utf8");
+  }
+}
+
+/** 推代码：敏感排除 → add → commit → push（token 仅用于本次命令 URL，不写入仓库配置）。 */
+async function pushCode({ repoRoot, message, token, dryRun }) {
+  if (!(await fs.stat(path.join(repoRoot, ".git")).catch(() => null))) {
+    return { ok: false, error: "该目录不是 git 仓库，无法推代码（可先 git init）" };
+  }
+  await ensureSensitiveExcludes(repoRoot);
+  const msg = message?.trim() || `专业版更新 ${new Date().toISOString().slice(0, 16).replace("T", " ")}`;
+  // 预览：add -A 的 dry-run（受 .gitignore + info/exclude 双重约束）
+  const preview = await runExec("git", ["add", "-A", "--dry-run"], { cwd: repoRoot, timeout: 30000 });
+  if (!preview.ok) return { ok: false, error: `git 扫描失败：${preview.error}` };
+  const files = preview.out.split("\n").filter(Boolean);
+  if (dryRun) {
+    return { ok: true, dryRun: true, files, message: msg };
+  }
+  if (files.length === 0) {
+    return { ok: false, error: "没有需要提交的改动（敏感信息已自动排除）" };
+  }
+  const add = await runExec("git", ["add", "-A"], { cwd: repoRoot, timeout: 60000 });
+  if (!add.ok) return { ok: false, error: `git add 失败：${add.error}` };
+  const commit = await runExec("git", ["commit", "-m", msg], { cwd: repoRoot, timeout: 60000 });
+  if (!commit.ok) {
+    const e = commit.error;
+    if (/nothing to commit|no changes added/.test(e)) {
+      return { ok: false, error: "没有需要提交的改动（敏感信息已自动排除）" };
+    }
+    return { ok: false, error: `git commit 失败：${e}` };
+  }
+  // 推当前分支到配置的仓库（token 走 URL，不进 .git/config）
+  const branch = await runExec("git", ["rev-parse", "--abbrev-ref", "HEAD"], { cwd: repoRoot, timeout: 15000 });
+  const branchName = branch.ok ? branch.out : "main";
+  const remoteUrl = `https://x-access-token:${token}@github.com/${ghConfig.repo}.git`;
+  const push = await runExec("git", ["-c", "credential.helper=", "push", remoteUrl, branchName], { cwd: repoRoot, timeout: 120000 });
+  if (!push.ok) {
+    return { ok: false, error: `git push 失败：${push.error}`, commit: commit.out };
+  }
+  return { ok: true, files: files.length, branch: branchName, commit: commit.out, pushed: true };
+}
+
+/** 上传到 GitHub Releases（测试版 prerelease）并上传 zip。 */
   async function githubUpload({ repo, token, tag, name, body, zipPath, filename }) {
     const headers = {
       Authorization: `Bearer ${token}`,
@@ -914,6 +1021,39 @@ export function apply(ctx) {
             release: { tag: up.tag, url: up.url, prerelease: true },
             version: target.semver,
           });
+        } catch (e) {
+          writeJson(res, 400, { error: String(e?.message ?? e) });
+        }
+      },
+    },
+    // 推代码到 GitHub（默认排查敏感信息；dryRun 预览）
+    {
+      kind: "exact",
+      path: "/api/pro/push",
+      handler: async (req, res) => {
+        if (!methodOf(req, res, "POST")) return;
+        try {
+          const body = await readJsonBody(req);
+          if (typeof body.path !== "string" || !body.path.trim()) {
+            writeJson(res, 400, { error: "缺少 path" });
+            return;
+          }
+          if (!ghConfig.repo || !ghConfig.token) {
+            writeJson(res, 400, { error: "尚未配置 GitHub 仓库/Token（总控制器 → GitHub 设置）" });
+            return;
+          }
+          const repoRoot = path.resolve(body.path);
+          const r = await pushCode({
+            repoRoot,
+            message: typeof body.message === "string" ? body.message : "",
+            token: ghConfig.token,
+            dryRun: body.dryRun === true,
+          });
+          if (!r.ok) {
+            writeJson(res, 400, { error: r.error });
+            return;
+          }
+          writeJson(res, 200, { ok: true, ...r });
         } catch (e) {
           writeJson(res, 400, { error: String(e?.message ?? e) });
         }

@@ -713,6 +713,31 @@ window.__ModuleLoader__.load({
         }
       };
 
+      // 推代码：预览（敏感已排除）→ 确认 → git commit + push
+      const doPush = async (arc) => {
+        if (!ghHasToken) {
+          window.alert("请先在下方「GitHub 设置」里配置仓库与 Token。");
+          return;
+        }
+        setBusy(true);
+        try {
+          const preview = await api("/api/pro/push", { method: "POST", body: { path: arc.path, dryRun: true } });
+          if (!preview.files || preview.files.length === 0) {
+            window.alert("没有需要推送的改动（敏感信息已自动排除）。");
+            return;
+          }
+          const list = preview.files.slice(0, 20).join("\n") + (preview.files.length > 20 ? `\n… 共 ${preview.files.length} 个文件` : "");
+          const msg = window.prompt(`将推送 ${preview.files.length} 个文件到 GitHub（${ghRepo}）\n\n${list}\n\n提交说明：`, `专业版更新 ${new Date().toISOString().slice(0, 10)}`);
+          if (msg === null) return;
+          const d = await api("/api/pro/push", { method: "POST", body: { path: arc.path, message: msg } });
+          window.alert(`推送成功！\n${d.commit}\n分支 ${d.branch} · ${d.files} 个文件`);
+        } catch (e) {
+          window.alert("推代码失败：" + e.message);
+        } finally {
+          setBusy(false);
+        }
+      };
+
       // GitHub 设置
       const [ghRepo, setGhRepo] = useState("");
       const [ghToken, setGhToken] = useState("");
@@ -802,6 +827,7 @@ window.__ModuleLoader__.load({
                                     h("span", { className: "dsp-verT" }, fmtTime(f.version.createdAt)),
                                     h("button", { className: "dsp-btn dsp-sm", disabled: busy, onClick: () => setVersionView(true, arc.path, f.version.id, f.version.semver) }, "查看"),
                                     h("button", { className: "dsp-btn dsp-sm dsp-primary", disabled: busy, onClick: () => doUpload(arc, f.version) }, "上传"),
+                                    h("button", { className: "dsp-btn dsp-sm", disabled: busy, onClick: () => doPush(arc) }, "推代码"),
                                     h("button", { className: "dsp-btn dsp-sm", disabled: busy, onClick: () => doRestore(arc, f.version) }, "回滚"),
                                     h("button", { className: "dsp-btn dsp-sm dsp-danger", disabled: busy, onClick: () => doDelete(arc, f.version) }, "删除")
                                   )
