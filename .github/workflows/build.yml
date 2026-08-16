@@ -19,9 +19,6 @@ jobs:
         with:
           targets: x86_64-pc-windows-msvc
 
-      - name: Install NSIS
-        run: choco install nsis -y --no-progress
-
       - name: Build release
         working-directory: src-tauri
         run: cargo build --release
@@ -31,7 +28,19 @@ jobs:
         run: |
           New-Item -ItemType Directory -Force installer\build
           Copy-Item src-tauri\target\release\dsh-desktop.exe installer\build\
-          makensis installer\installer.nsi
+          # WebView2Loader.dll（GNU/动态链接构建必需）：来自 NuGet 官方包
+          Invoke-WebRequest -Uri "https://www.nuget.org/api/v2/package/Microsoft.Web.WebView2/1.0.2903.40" -OutFile "$env:TEMP\wv2.zip"
+          Expand-Archive "$env:TEMP\wv2.zip" -DestinationPath "$env:TEMP\wv2" -Force
+          Copy-Item "$env:TEMP\wv2\runtimes\win-x64\native\WebView2Loader.dll" installer\build\ -Force
+          # WebView2 Runtime 引导器（缺失时自动安装）
+          Invoke-WebRequest -Uri "https://go.microsoft.com/fwlink/p/?LinkId=2124703" -OutFile installer\build\MicrosoftEdgewebview2Setup.exe
+          # 便携版 NSIS
+          $nsisZip = "$env:TEMP\nsis.zip"
+          Invoke-WebRequest -Uri "https://github.com/tauri-apps/binary-releases/releases/download/nsis-3/nsis-3.zip" -OutFile $nsisZip
+          Expand-Archive $nsisZip -DestinationPath "$env:TEMP\nsis" -Force
+          $makensis = Get-ChildItem "$env:TEMP\nsis" -Recurse -Filter "makensis.exe" | Select-Object -First 1
+          if (-not $makensis) { throw "makensis not found after NSIS extraction" }
+          & $makensis.FullName installer\installer.nsi
 
       - name: Upload installer artifact
         uses: actions/upload-artifact@v4
