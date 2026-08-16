@@ -12,6 +12,9 @@
 - 🧭 系统托盘：常驻托盘图标，左键点击恢复窗口
 - 🚫 关闭窗口 = 隐藏到托盘（不退出）；托盘菜单「退出」才真正退出
 - 💬 未找到 dsh 时弹出提示并引导安装，不再无响应等待
+- 🔄 **桌面版更新检查**：托盘菜单「检查更新」+ 启动后静默检查 GitHub Releases，发现新版本自动打开下载页
+- 📱 **移动端远程控制**：Web UI 内置扫码配对，手机可远程控制当前工作区（自动 Cloudflare 隧道，公网可达）
+- ⚡ **快速冷启动**：窗口先显示启动占位页，dsh 在后台线程拉起，双击后窗口立即出现
 
 ## 安装
 
@@ -27,7 +30,7 @@
 - 操作系统：Windows 10/11（自带 WebView2，无需额外运行时）
 - 应用启动时自动查找并启动 dsh：优先使用安装包自带的捆绑运行时，其次 PATH 中的 `dsh`，最后回退到 npm 全局安装的 `@deepseek-ai/dsh`。
 - `-full` 版内置完整 Node.js（含 npm/npx），安装时可勾选「添加到 PATH」以便在命令行使用；若系统已有 Node.js 则自动跳过，不会覆盖或冲突。
-- **关于 pnpm**：`-full` 版内置 Node.js 与 dsh 运行时，但**不含 pnpm**。Web UI 左下角的「检查更新」（来自 `@captain1275/dsh-remote-web-ui` 插件）依赖 `pnpm` 命令来更新插件；若系统中没有 pnpm（`pnpm --version` 报错），该按钮会提示「未找到 pnpm」。需要此功能时，安装 `-full` 版并在「将内置 Node.js 添加到 PATH」打勾，然后执行 `npm install -g pnpm`；或使用精简版并自装 Node.js ≥ 18 与 pnpm（`npm install -g pnpm` 或 `corepack enable`）。
+- **Web UI 左下角「检查更新」**：该按钮检查的是**本桌面版仓库**（`emomg/deepseek-harness-desktop`）的 GitHub Releases，发现新版本会打开下载页。它由 Web UI 插件 `@captain1275/dsh-remote-web-ui` 提供；插件自身另有 npm 更新通道（可选，需系统安装 pnpm，`npm install -g pnpm` 或 `corepack enable`），不影响桌面版更新检查。
 
 ## 从源码构建
 
@@ -79,7 +82,8 @@ makensis installer\installer.nsi
 ## 常见问题
 
 - **提示"未找到 dsh"**：执行 `npm install -g @deepseek-ai/dsh` 后重新启动应用。
-- **Web UI 左下角「检查更新」提示"未找到 pnpm"**：该按钮由插件 `@captain1275/dsh-remote-web-ui` 提供，更新插件依赖 `pnpm` 命令。若 `pnpm --version` 不可用：`-full` 版请勾选「将内置 Node.js 添加到 PATH」后运行 `npm install -g pnpm`；精简版请先安装 Node.js ≥ 18 再运行 `npm install -g pnpm`（或 `corepack enable`）。安装 pnpm 后重启 dsh web 即可正常检查/更新。
+- **Web UI 左下角「检查更新」提示"未找到 pnpm"**：该按钮现在检查**桌面版仓库**（GitHub Releases），不再依赖 pnpm。若你的版本仍提示此错误，请升级到最新安装包（或重启 dsh web）。插件自身的 npm 更新通道才需要 pnpm：`-full` 版勾选「将内置 Node.js 添加到 PATH」后 `npm install -g pnpm`；精简版装 Node.js ≥ 18 后 `npm install -g pnpm` 或 `corepack enable`。
+- **移动端远程控制提示"无法连接配对服务"**：通常是插件未加载或旧版本。请先升级到最新安装包并重启桌面版；若仍异常，在 dsh 日志中查看 `remote-web-ui` 插件报错，或重新安装插件（`dsh plugin --profile web update @captain1275/dsh-remote-web-ui`）。
 - **3080 端口已被占用**：应用会直接复用已有 dsh 实例，不会重复启动。
 - **关闭窗口后应用还在**：这是设计行为——窗口关闭即最小化到系统托盘，请从托盘菜单「退出」彻底退出。
 - **安装后无法打开**：确认系统为 Windows 10/11 且已安装 WebView2 运行时（Win10/11 一般自带）。
