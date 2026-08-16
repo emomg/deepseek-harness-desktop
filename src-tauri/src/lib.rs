@@ -31,11 +31,12 @@ const APP_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 /// 用捆绑/系统的 node 跑一小段 fetch 脚本，取 GitHub 最新 release 的 tag 和页面。
 /// 返回 (tag, html_url)；任何一步失败返回 None（网络不可用、node 缺失等，均静默）。
-fn fetch_latest_release() -> Option<(String, String, Option<String>)> {
+fn fetch_latest_release(prefer_full: bool) -> Option<(String, String, Option<String>, Option<String>)> {
     // 优先捆绑运行时里的 node（-full 版），其次 PATH/Program Files 里的 node。
     let node = bundled_runtime()
         .map(|(n, _)| n)
         .or_else(find_node)?;
+    let pick = if prefer_full { "full" } else { "slim" };
     let script = format!(
         r#"const r = await fetch('{api}', {{
   headers: {{ 'User-Agent': 'dsh-desktop-update-check', 'Accept': 'application/vnd.github+json' }}
@@ -44,12 +45,19 @@ if (!r.ok) process.exit(2);
 const j = await r.json();
 console.log(j.tag_name || '');
 console.log(j.html_url || '');
-const full = (j.assets || []).find(a => a.name && a.name.includes('-full.exe'));
-const slim = (j.assets || []).find(a => a.name && a.name.endsWith('.exe'));
-const asset = full || slim;
+const prefer = '{pick}';
+const all = (j.assets || []).filter(a => a.name && a.name.endsWith('.exe'));
+let asset;
+if (prefer === 'full') {{
+  asset = all.find(a => a.name.includes('-full.exe')) || all[0];
+}} else {{
+  asset = all.find(a => !a.name.includes('-full.exe')) || all[0];
+}}
 console.log(asset ? (asset.browser_download_url || '') : '');
+console.log(asset ? (asset.digest || '') : '');
 "#,
-        api = UPDATE_API_URL
+        api = UPDATE_API_URL,
+        pick = pick
     );
     let out = Command::new(&node).args(["-e", &script]).output().ok()?;
     eprintln!("[dsh-desktop] checking updates for {}", update_repo_label());
@@ -64,19 +72,45 @@ console.log(asset ? (asset.browser_download_url || '') : '');
         return None;
     }
     let asset = lines.next().map(|s| s.trim().to_string()).filter(|s| !s.is_empty());
+    let digest = lines.next().map(|s| s.trim().to_string()).filter(|s| !s.is_empty());
     Some((
         tag,
         if url.is_empty() { UPDATE_PAGE_URL.to_string() } else { url },
         asset,
+        digest,
     ))
 }
 
-/// 用 node 下载安装包到系统临时目录，返回本地路径。
+/// 校验下载文件的 SHA256 是否与 GitHub 公布的 digest 一致（防篡改）。
+fn verify_digest(path: &Path, expected: &str) -> bool {
+    use sha2::Digest;
+    use std::io::Read;
+    let digest = expected.strip_prefix("sha256:").unwrap_or(expected);
+    let Ok(mut f) = std::fs::File::open(path) else { return false };
+    let mut hasher = sha2::Sha256::new();
+    let mut buf = [0u8; 65536];
+    loop {
+        match f.read(&mut buf) {
+            Ok(0) => break,
+            Ok(n) => hasher.update(&buf[..n]),
+            Err(_) => return false,
+        }
+    }
+    let actual = format!("{:x}", hasher.finalize());
+    actual.eq_ignore_ascii_case(digest)
+}
+
+/// 用 node 下载安装包到系统临时目录（随机文件名，避免固定路径被预置），返回本地路径。
 fn download_installer(url: &str) -> Option<PathBuf> {
     let node = bundled_runtime()
         .map(|(n, _)| n)
         .or_else(find_node)?;
-    let dest = std::env::temp_dir().join("dsh-desktop-setup.exe");
+    let nonce: u64 = {
+        use std::time::{SystemTime, UNIX_EPOCH};
+        SystemTime::now().duration_since(UNIX_EPOCH).ok().map(|d| d.as_nanos() as u64).unwrap_or(0)
+            ^ std::process::id() as u64
+    };
+    let dest = std::env::temp_dir().join(format!("dsh-desktop-setup-{nonce:x}.exe"));
     let script = r#"
 const fs = require('node:fs');
 const r = await fetch(process.argv[1], { headers: { 'User-Agent': 'dsh-desktop-update' } });
@@ -166,7 +200,9 @@ fn confirm_update_dialog(title: &str, message: &str) -> bool {
 #[cfg(windows)]
 fn run_update_check(app: tauri::AppHandle) {
     let current = APP_VERSION.to_string();
-    match fetch_latest_release() {
+    // 当前是 -full 自包含版（exe 同级有 runtime）则更新 full 安装包，否则更新精简版。
+    let prefer_full = bundled_runtime().is_some();
+    match fetch_latest_release(prefer_full) {
         None => {
             show_update_dialog(
                 "检查更新",
@@ -179,7 +215,7 @@ fn run_update_check(app: tauri::AppHandle) {
                 ),
             );
         }
-        Some((tag, _url, asset_url)) => {
+        Some((tag, _url, asset_url, digest)) => {
             if !is_newer(&tag, &current) {
                 show_update_dialog("检查更新", &format!("当前已是最新版本 v{current}。"));
                 return;
@@ -196,11 +232,25 @@ fn run_update_check(app: tauri::AppHandle) {
                 show_update_dialog("更新失败", "无法获取安装包下载地址，请手动访问下载页。");
                 return;
             };
+            // 安全：只接受本仓库官方 GitHub 域名下的安装包，拒绝重定向到其他来源。
+            let trusted = url.starts_with("https://github.com/emomg/deepseek-harness-desktop/releases/download/");
+            if !trusted {
+                show_update_dialog("更新失败", "安装包下载地址异常，已取消自动更新。请手动访问下载页。");
+                return;
+            }
             show_update_dialog("正在下载", "正在下载新版本安装包，请稍候…");
             let Some(setup) = download_installer(&url) else {
                 show_update_dialog("更新失败", "下载安装包失败，请稍后重试或手动访问下载页。");
                 return;
             };
+            // 安全：校验 SHA256 与 GitHub 公布的 digest 一致，防止下载被篡改。
+            if let Some(expected) = digest {
+                if !verify_digest(&setup, &expected) {
+                    let _ = std::fs::remove_file(&setup);
+                    show_update_dialog("更新失败", "安装包完整性校验失败（SHA256 不匹配），已取消安装。");
+                    return;
+                }
+            }
             if !run_installer(&setup) {
                 show_update_dialog("更新失败", "安装程序启动失败，请手动运行安装包。");
                 return;
