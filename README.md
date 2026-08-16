@@ -3,10 +3,16 @@
 **DeepSeek Harness 向 IDE 的延伸** —— 以 DSH 插件（`@dsh-pro/desktop`）形式实现的版本管理专业版。
 不仿照 VS Code，保持 DSH 原生观感与工作区/会话模型，桌面壳只做窗口容器。
 
-> 📌 **版本说明**：本分支（`pro-v0.1`）是**专业版测试版**，与正式版（`main` 分支 / v0.1.0）**并存互不覆盖**。
-> Releases 页面同时提供两个版本的下载：
-> - `v0.1.0` — 正式版桌面客户端（原版，未改动）
-> - `v0.1.0-pro-test` — 专业版 v0.1（测试版，本分支）
+> 📌 **双版本并存，互不覆盖**：
+>
+> | 分支 / Release | 定位 | 文档 |
+> |---|---|---|
+> | `main` / **v0.1.0** | **正式版**桌面客户端（原版，安装即用） | 小白请看 [start.md](https://github.com/emomg/deepseek-harness-desktop/blob/main/start.md) |
+> | `pro-v0.1` / **v0.1.0-pro-test** | **专业版**（本分支，正式版 + DSH 插件） | 本 README + [start.md](start.md) 第二部分 |
+>
+> - 正式版：双击安装 exe 即用，**不需要**装插件。
+> - 专业版：在正式版基础上多一个插件（`@dsh-pro/desktop`），提供版本管理/总控制器/文件区/上传推代码。
+> - 两者 Releases 页面同时提供下载，互不影响。
 
 ## 功能
 
