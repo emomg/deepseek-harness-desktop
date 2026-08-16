@@ -31,7 +31,7 @@ const APP_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 /// 用捆绑/系统的 node 跑一小段 fetch 脚本，取 GitHub 最新 release 的 tag 和页面。
 /// 返回 (tag, html_url)；任何一步失败返回 None（网络不可用、node 缺失等，均静默）。
-fn fetch_latest_release() -> Option<(String, String)> {
+fn fetch_latest_release() -> Option<(String, String, Option<String>)> {
     // 优先捆绑运行时里的 node（-full 版），其次 PATH/Program Files 里的 node。
     let node = bundled_runtime()
         .map(|(n, _)| n)
@@ -44,6 +44,10 @@ if (!r.ok) process.exit(2);
 const j = await r.json();
 console.log(j.tag_name || '');
 console.log(j.html_url || '');
+const full = (j.assets || []).find(a => a.name && a.name.includes('-full.exe'));
+const slim = (j.assets || []).find(a => a.name && a.name.endsWith('.exe'));
+const asset = full || slim;
+console.log(asset ? (asset.browser_download_url || '') : '');
 "#,
         api = UPDATE_API_URL
     );
@@ -59,7 +63,55 @@ console.log(j.html_url || '');
     if tag.is_empty() {
         return None;
     }
-    Some((tag, if url.is_empty() { UPDATE_PAGE_URL.to_string() } else { url }))
+    let asset = lines.next().map(|s| s.trim().to_string()).filter(|s| !s.is_empty());
+    Some((
+        tag,
+        if url.is_empty() { UPDATE_PAGE_URL.to_string() } else { url },
+        asset,
+    ))
+}
+
+/// 用 node 下载安装包到系统临时目录，返回本地路径。
+fn download_installer(url: &str) -> Option<PathBuf> {
+    let node = bundled_runtime()
+        .map(|(n, _)| n)
+        .or_else(find_node)?;
+    let dest = std::env::temp_dir().join("dsh-desktop-setup.exe");
+    let script = r#"
+const fs = require('node:fs');
+const r = await fetch(process.argv[1], { headers: { 'User-Agent': 'dsh-desktop-update' } });
+if (!r.ok) process.exit(2);
+const buf = Buffer.from(await r.arrayBuffer());
+fs.writeFileSync(process.argv[2], buf);
+console.log('downloaded ' + buf.length);
+"#;
+    let out = Command::new(&node)
+        .args(["-e", script, url, &dest.to_string_lossy()])
+        .output()
+        .ok()?;
+    if !out.status.success() || !dest.is_file() {
+        return None;
+    }
+    Some(dest)
+}
+
+/// 静默运行 NSIS 安装器（/S），等待完成。
+fn run_installer(path: &Path) -> bool {
+    match Command::new(path)
+        .arg("/S")
+        .creation_flags(CREATE_NO_WINDOW)
+        .status()
+    {
+        Ok(status) => status.success(),
+        Err(_) => false,
+    }
+}
+
+/// 查找已安装桌面版 exe（AppData 安装目录）。
+fn installed_exe() -> Option<PathBuf> {
+    let local = std::env::var_os("LOCALAPPDATA")?;
+    let p = Path::new(&local).join("Programs").join("DeepSeek Harness").join("dsh-desktop.exe");
+    p.is_file().then_some(p)
 }
 
 /// 解析 "v0.1.1" / "0.1.1" 为 (0,1,1)；解析失败返回 None。
@@ -94,19 +146,25 @@ fn show_update_dialog(title: &str, message: &str) {
     }
 }
 
-/// 打开浏览器访问某个 URL（用系统默认浏览器）。
+/// 弹出"是/否"确认框，返回用户是否点了"是"。
 #[cfg(windows)]
-fn open_url(url: &str) {
-    let _ = Command::new("cmd")
-        .args(["/c", "start", "", url])
-        .creation_flags(CREATE_NO_WINDOW)
-        .spawn();
+fn confirm_update_dialog(title: &str, message: &str) -> bool {
+    use windows_sys::Win32::UI::WindowsAndMessaging::{MessageBoxW, MB_ICONQUESTION, MB_YESNO, IDYES};
+
+    fn wide(s: &str) -> Vec<u16> {
+        s.encode_utf16().chain(std::iter::once(0)).collect()
+    }
+    let t = wide(title);
+    let m = wide(message);
+    unsafe {
+        MessageBoxW(std::ptr::null_mut(), m.as_ptr(), t.as_ptr(), MB_YESNO | MB_ICONQUESTION) == IDYES
+    }
 }
 
-/// 执行一次完整检查：拉取最新 release，比较版本，按结果弹窗。
-/// 在线程里调用（不阻塞 UI）。
+/// 执行一次完整检查：拉取最新 release，比较版本；有新版本时询问是否自动下载安装。
+/// 在线程里调用（不阻塞 UI）；安装完成后退出当前应用并启动新版。
 #[cfg(windows)]
-fn run_update_check() {
+fn run_update_check(app: tauri::AppHandle) {
     let current = APP_VERSION.to_string();
     match fetch_latest_release() {
         None => {
@@ -121,17 +179,38 @@ fn run_update_check() {
                 ),
             );
         }
-        Some((tag, url)) => {
-            if is_newer(&tag, &current) {
-                let msg = format!(
-                    "发现新版本 v{tag}（当前 v{current}）。
-
-是否前往下载页下载更新？"
-                );
-                show_update_dialog("发现新版本", &msg);
-                open_url(&url);
-            } else {
+        Some((tag, _url, asset_url)) => {
+            if !is_newer(&tag, &current) {
                 show_update_dialog("检查更新", &format!("当前已是最新版本 v{current}。"));
+                return;
+            }
+            let msg = format!(
+                "发现新版本 v{tag}（当前 v{current}）。
+
+是否立即下载并自动安装？"
+            );
+            if !confirm_update_dialog("发现新版本", &msg) {
+                return;
+            }
+            let Some(url) = asset_url else {
+                show_update_dialog("更新失败", "无法获取安装包下载地址，请手动访问下载页。");
+                return;
+            };
+            show_update_dialog("正在下载", "正在下载新版本安装包，请稍候…");
+            let Some(setup) = download_installer(&url) else {
+                show_update_dialog("更新失败", "下载安装包失败，请稍后重试或手动访问下载页。");
+                return;
+            };
+            if !run_installer(&setup) {
+                show_update_dialog("更新失败", "安装程序启动失败，请手动运行安装包。");
+                return;
+            }
+            // 安装完成：启动新版 exe 并退出当前应用（旧进程让位给新版）。
+            if let Some(exe) = installed_exe() {
+                let _ = Command::new(&exe).spawn();
+                app.exit(0);
+            } else {
+                show_update_dialog("更新完成", &format!("新版本 v{tag} 已安装完成，请重新打开桌面版。"));
             }
         }
     }
@@ -352,20 +431,10 @@ pub fn run() {
 
             // 启动后静默检查一次桌面版更新（后台线程，不阻塞；有新版本才提示）
             {
+                let handle = app.handle().clone();
                 std::thread::spawn(move || {
                     std::thread::sleep(Duration::from_secs(5));
-                    let current = APP_VERSION.to_string();
-                    if let Some((tag, url)) = fetch_latest_release() {
-                        if is_newer(&tag, &current) {
-                            let msg = format!(
-                                "发现新版本 v{tag}（当前 v{current}）。
-
-是否前往下载页下载更新？"
-                            );
-                            show_update_dialog("发现新版本", &msg);
-                            open_url(&url);
-                        }
-                    }
+                    run_update_check(handle);
                 });
             }
 
@@ -410,7 +479,8 @@ pub fn run() {
                 .menu(&menu)
                 .on_menu_event(|app, event| match event.id.as_ref() {
                     "update-check" => {
-                        std::thread::spawn(run_update_check);
+                        let handle = app.clone();
+                        std::thread::spawn(move || run_update_check(handle));
                     }
                     "show" => {
                         if let Some(w) = app.get_webview_window("main") {
