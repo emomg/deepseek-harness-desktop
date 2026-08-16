@@ -1,63 +1,115 @@
-# 🚀 DeepSeek Harness 桌面版 · 新手安装指南
+# 🚀 DeepSeek Harness Pro（专业版）· 一步一步上手
 
-> 本指南写给第一次接触的朋友。跟着步骤做，**5 分钟就能装好**。遇到问题请看文末「常见问题」。
+> 本指南写给想用**专业版**的朋友。专业版 = 正式版 + 一个 **DSH 插件**（`@dsh-pro/desktop`），
+> 提供项目版本管理、总控制器、文件区、GitHub 上传/推代码。
+> 跟着做 **10 分钟** 就能用起来。遇到问题看文末「常见问题」。
 
-## 这是什么？
+## 专业版和正式版的关系
 
-DeepSeek Harness 是深度求索（DeepSeek）出品的 AI 编程助手平台。本项目的**桌面版**像普通软件一样：双击安装、双击打开，后台服务会自动帮你跑起来，不用碰命令行。
+| | 正式版（main / v0.1.0） | 专业版（pro-v0.1 / v0.1.0-pro-test） |
+|---|---|---|
+| 桌面客户端 | ✅ 完整可用 | ✅ 同一套（壳） |
+| 版本管理 / 总控制器 / 文件区 / 上传 | ❌ | ✅ **插件提供** |
+| 安装方式 | 安装 exe 即可 | 装好正式版后，**再装一个插件** |
 
-## 安装前，请确认
+两个版本**并存互不覆盖**：正式版 Release 照旧，专业版是额外的测试版 Release。
 
-- 电脑系统是 **Windows 10 或 Windows 11**
-- 电脑能正常上网
+## 前提
 
-## 第 1 步：下载安装包
+- Windows 10/11，能上网
+- 已安装 DSH 桌面端（正式版 `DeepSeek-Harness-Desktop-Setup-0.1.0-full.exe`，见原 [start.md](https://github.com/emomg/deepseek-harness-desktop/blob/main/start.md)）
+- 或已安装 Node.js ≥ 18 + `npm install -g @deepseek-ai/dsh`
 
-1. 打开网页：<https://github.com/emomg/deepseek-harness-desktop>
-2. 点击页面右侧的 **Releases**（发行版）
-3. 下载 **`DeepSeek-Harness-Desktop-Setup-0.1.0-full.exe`**（自包含版，约 100MB）
+## 第 1 步：拿到专业版插件
 
-> 💡 为什么选 `-full` 版？它已经把运行所需的程序都打包好了，**不需要**另外安装任何东西。另一个 `Setup-0.1.0.exe`（约 2MB）是给开发者用的精简版，需要自己装 Node.js。
+任选一种：
 
-## 第 2 步：安装
+- **A（推荐）**：从 Releases 下载插件包
+  `https://github.com/emomg/deepseek-harness-desktop/releases/tag/v0.1.0-pro-test`
+  → 下载 `dsh-pro-desktop-v0.1.0-pro-test.zip` → 解压到一个固定目录（如 `D:\dsh-pro-plugin`）
+- **B（开发者）**：clone 专业版分支
+  ```powershell
+  git clone -b pro-v0.1 https://github.com/emomg/deepseek-harness-desktop.git D:\dsh\desktop-app
+  # 插件在 D:\dsh\desktop-app\pro-plugin
+  ```
 
-1. 双击刚才下载的 `DeepSeek-Harness-Desktop-Setup-0.1.0-full.exe`
-2. 一路点「下一步」→「安装」（安装到你账户的目录，**不需要管理员权限**）
-3. 安装界面会有一个勾选项「将内置 Node.js 添加到 PATH」——建议保留勾选：这样内置的 node/npm 命令也能在命令行里使用；如果电脑上已经有 Node.js，安装程序会自动跳过，不会影响你原有的环境
-4. 安装完成后会自动启动
+## 第 2 步：安装插件
 
-## 第 3 步：开始使用
+```powershell
+# 方式 A（目录已解压）
+dsh plugin --profile web add link:D:\dsh-pro-plugin
 
-- 首次打开：应用会自动启动内置服务并弹出主窗口，稍等几秒即可使用
-- 点窗口右上角 **×** 不会退出，而是最小化到**系统托盘**（屏幕右下角的小图标）
-- 想彻底退出：右键托盘图标 → 点「退出」
-- 下次使用：双击桌面上的「DeepSeek Harness」快捷方式即可
+# 方式 B（clone 的仓库内）
+dsh plugin --profile web add link:D:\dsh\desktop-app\pro-plugin
+```
 
-## 常见问题（小白必看）
+验证（应看到 `- id: dsh-pro`）：
 
-**问：双击安装包没反应？**
-答：先确认下载完整（`-full` 版约 100MB）。如果浏览器提示"不安全"，选择"保留"即可；安装包是开源的，源码在本仓库。
+```powershell
+dsh --profile web --dump-config | Select-String dsh-pro
+```
 
-**问：提示找不到 WebView2Loader.dll 或无法打开窗口？**
-答：安装包已自带 WebView2Loader.dll，并会在缺少 WebView2 运行时（Windows 内置的网页内核）时自动静默安装。如果仍提示，可手动安装 WebView2 运行时：https://developer.microsoft.com/microsoft-edge/webview2/
+## 第 3 步：重启并找到入口
 
-**问：应用打不开，提示"拒绝访问"或闪退？**
-答：若安装目录旁生成了 `dsh-desktop-panic.log`，请把该文件内容发到 Issues：https://github.com/emomg/deepseek-harness-desktop/issues，会有人帮你排查。
+1. 重启桌面端（或重启 dsh web）—— **必须重启**，插件只在全新启动时加载
+2. 打开后，DSH **侧边栏底部**出现「总版本控制器」图标
+3. 任意会话**头部**出现「版本」「文件区」两个按钮
 
-**问：需要管理员权限吗？**
-答：不需要。安装在自己账户的目录下（`%LOCALAPPDATA%\Programs\DeepSeek Harness`）。
+## 第 4 步：建立档案 + 自动快照
 
-**问：我的聊天记录和密钥安全吗？**
-答：安全。所有数据只保存在**你自己电脑**的 `~/.dsh` 文件夹里（聊天记录、密钥、配置都在这里），不会上传到任何地方，也不会随安装包分发。
+1. 在 DSH 侧边栏「工作区」新建工作区 → 选一个**项目目录**（如 `D:\my-project`）
+2. 在该工作区里开会话干活
+3. **每完成一轮任务** → 自动打一次快照（目录文件 + 该会话对话 + AI 生成内容，自动标记「自动」）
+4. 想手动存档：总控制器 → 展开工作区 → 「工作区级快照」（或功能框快照）
 
-**问：怎么卸载？**
-答：开始菜单 → DeepSeek Harness → 「卸载 DeepSeek Harness」。卸载只删除应用本身，**不会删除**你的数据；想彻底清除数据，再手动删除 `~/.dsh` 文件夹即可。
+## 第 5 步：总版本控制器（左下角）
 
-**问：看不懂报错怎么办？**
-答：把报错文字截图发到 Issues：<https://github.com/emomg/deepseek-harness-desktop/issues>，会有人帮你。
+- 打开总控制器 → 顶部是**最终版总览**：每个子控制器的最终版一行
+- 操作：**查看**（浏览该版本文件）/ **上传**（发 GitHub Release）/ **推代码** / **回滚** / **删除**
+- 展开工作区 → 完整版本历史 → 版本行「**设最终**」把某个版本定为最终版
 
-## 给开发者的补充说明
+## 第 6 步：GitHub 设置 + 上传 / 推代码
 
-- `-full` 版自带运行时，普通用户无需安装 Node.js；开发者若想用命令行版，可安装 Node.js ≥ 18 后执行 `npm install -g @deepseek-ai/dsh`，再使用约 2MB 的精简安装包。
-- 功能特性与源码构建：见 [README](README.md)
-- 许可：MIT License，Copyright (c) 2026 DeepSeek
+1. 总控制器底部「**GitHub 设置**」→ 填：
+   - `owner/repo`（如 `emomg/deepseek-harness-desktop`）
+   - Token：GitHub → Settings → Developer settings → **Fine-grained tokens** → 勾选该仓库 **Contents: Read and write**
+   - 点「保存」（Token 只存在本机）
+2. **上传**：选最终版 → 确认 → 选内容（文件区/对话区/两者）→ 自动创建 Release（`vX.Y.Z`，**测试版**）并传 zip
+3. **推代码**：点「推代码」→ 预览将提交的文件（**敏感信息已自动排除**，如 `.env`/密钥）→ 填提交说明 → 自动 commit + push
+
+## 第 7 步：右侧文件区
+
+- 会话头部「文件区」→ 「＋ 添加」→ 下拉选类型：
+  - **git 仓库**：填 `https://...` 或 `git@...` → 自动 clone 到本地，可「拉取」更新
+  - **本地文件夹**：填完整路径
+- 点源名浏览文件树，点文件查看源码；git 源显示分支徽标 + 改动数
+
+## 常见问题
+
+**问：装了插件但界面没变化？**
+答：必须**重启 dsh web**（插件只在启动时加载）。重启后侧边栏底部应有「总版本控制器」。
+
+**问：`dsh plugin` 报 pnpm 错误？**
+答：需要 pnpm（`npm install -g pnpm` 或 `corepack enable`），并确保对 `~/.dsh` 与 pnpm 缓存目录有写权限。
+
+**问：上传/推代码提示"尚未配置 GitHub"？**
+答：去总控制器底部「GitHub 设置」填仓库 + Token。
+
+**问：推代码会不会把 `.env` 推上去？**
+答：**不会**。敏感模式（`.env`、`*.pem`、`*secret*` 等）会自动写入项目 `.git/info/exclude`（仅本地生效），预览时能看到已排除，确认后才提交。
+
+**问：回滚后对话没变？**
+答：对话区回滚需要刷新页面或重启 dsh 才完全生效；文件区回滚立即生效。
+
+**问：正式版会受影响吗？**
+答：不会。专业版是独立分支 + 独立测试版 Release，正式版（main / v0.1.0）原样保留。
+
+**问：报错/闪退？**
+答：看桌面端旁的 `dsh-pro.log` / `dsh-desktop-panic.log`，发到 Issues：<https://github.com/emomg/deepseek-harness-desktop/issues>
+
+## 给开发者的补充
+
+- 插件源码：`pro-plugin/`（宿主 `lib/index.js` + 版本核心 `lib/version.js` + 客户端 `lib/client.js`，均无构建步骤）
+- 无头测试：`node pro-plugin\test\version.test.js`（23 项）/ `node pro-plugin\test\host.test.js`（41 项）
+- 架构与接口：见 [PRO-DESIGN.md](PRO-DESIGN.md)
+- 许可：MIT License
