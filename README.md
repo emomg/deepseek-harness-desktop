@@ -6,7 +6,7 @@
 
 > 📌 **双版本并存，互不覆盖**：本仓库同时提供**正式版**与**专业版（测试版）**，Releases 页面两个版本都可在下载。
 > - **正式版 v0.1.0** —— 本 README 介绍的主体，安装即用
-> - **专业版 v0.1.0（测试版）** —— 正式版 + DSH 插件的**延伸**（见文末「延伸：专业版」）
+> - **专业版 v0.1.1（测试版）** —— 正式版 + DSH 插件的**延伸**（见文末「延伸：专业版」）
 
 ## 📦 下载安装（Releases）
 
@@ -15,7 +15,7 @@
 | 版本 | 安装包 | 说明 |
 |---|---|---|
 | **正式版 v0.1.0** `v0.1.0` | [Setup-0.1.0-full.exe](https://github.com/emomg/deepseek-harness-desktop/releases/tag/v0.1.0)（约 100MB）<br>[Setup-0.1.0.exe](https://github.com/emomg/deepseek-harness-desktop/releases/tag/v0.1.0)（约 4MB） | **两个安装包都提供**：full 版自带 Node/dsh 运行时免预装；精简版需本机 Node ≥ 18 |
-| **专业版 v0.1.0（测试版）** `v0.1.0-pro-test` | [Setup-0.1.0-pro-test.exe](https://github.com/emomg/deepseek-harness-desktop/releases/tag/v0.1.0-pro-test)（约 4MB）<br>[插件包 zip](https://github.com/emomg/deepseek-harness-desktop/releases/tag/v0.1.0-pro-test) | 精简安装包（需 Node ≥ 18）；已有 DSH 环境可只装插件 zip |
+| **专业版 v0.1.1（测试版）** `v0.1.1-pro` | [Setup-0.1.1-pro.exe](https://github.com/emomg/deepseek-harness-desktop/releases/tag/v0.1.1-pro)（约 4MB）<br>[插件包 zip](https://github.com/emomg/deepseek-harness-desktop/releases/tag/v0.1.1-pro) | 精简安装包（需 Node ≥ 18）；已有 DSH 环境可只装插件 zip |
 
 > 小白完整安装指引见 [start.md](start.md)。
 
@@ -63,7 +63,7 @@ Copy-Item src-tauri\target\release\dsh-desktop.exe installer\build\
 makensis installer\installer.nsi                      # Setup-0.1.0.exe（精简）
 makensis installer\installer.nsi /DRUNTIME_DIR=...    # Setup-0.1.0-full.exe（带运行时）
 #    专业版（精简安装包）：
-makensis installer\installer-pro.nsi                  # Setup-0.1.0-pro-test.exe
+makensis installer\installer-pro.nsi                  # Setup-0.1.1-pro.exe
 ```
 
 ## 工程结构
@@ -99,13 +99,13 @@ makensis installer\installer-pro.nsi                  # Setup-0.1.0-pro-test.exe
 
 # 延伸：专业版（测试版）
 
-> 专业版 = 正式版桌面端 + **DSH 插件**（`@dsh-pro/desktop`）—— DeepSeek Harness 向 IDE 的延伸。
+> 专业版 = 正式版桌面端 + **DSH 插件**（`@dsh-pro/core`）—— DeepSeek Harness 向 IDE 的延伸。
 > 保持 DSH 原生观感与工作区/会话模型，不仿照 VS Code；桌面壳只做窗口容器。
 
 ## 获取（专业版）
 
-- **安装包**：Releases `v0.1.0-pro-test` → `Setup-0.1.0-pro-test.exe`（精简版，需 Node ≥ 18）
-- **纯插件**：`dsh-pro-desktop-v0.1.0-pro-test.zip`（给已有 DSH 环境的用户）
+- **安装包**：Releases `v0.1.1-pro` → `Setup-0.1.1-pro.exe`（精简版，需 Node ≥ 18）
+- **纯插件**：`dsh-pro-desktop-v0.1.1.zip`（给已有 DSH 环境的用户）
 - 装好桌面端后，**再安装一次插件**即可获得专业版功能：
 
 ```powershell
@@ -115,35 +115,30 @@ dsh --profile web --dump-config | Select-String dsh-pro   # 应看到 - id: dsh-
 # 重启 dsh web / 桌面端
 ```
 
-## 功能（专业版）
+## 功能（专业版 v0.1.1）
 
 | 能力 | 说明 |
 |---|---|
-| 🧭 **子版本控制器** | 每个会话 = 一个功能框，会话头部「版本 / 文件区」；**每完成一轮任务自动快照**（AI 生成内容一并纳入） |
-| 🎛 **总版本控制器** | 侧边栏左下角入口，**管理各子控制器的最终版**：查看版本文件 / 上传 / 推代码 / 回滚 / 删除 |
-| 📂 **右侧总文件区** | **拉取的 git 仓库 + 本地文件夹**（与工作区解耦）：文件树浏览、点击查看源码、git 分支徽标、拉取更新 |
-| 📤 **真 GitHub 上传** | 打包（文件区/对话区可选）→ 创建 Release（**测试版 prerelease**）→ 上传 zip 资产 |
-| 🔄 **推代码** | 一键 git commit + push 到配置的仓库；**默认排查敏感信息**（`.env`/密钥/凭证等，仅本地排除，不入仓库） |
-| 👀 **版本文件查看** | 任意版本快照内的文件可树状浏览、查看源码 |
-| ⚙️ **GitHub 设置** | 面板内配置 `owner/repo` + Token（仅存本机，接口不回传明文） |
-| 🗂 **构建目录纳入** | `dist/build/out` 等构建输出是开发产出，**纳入**快照与文件区；只排除工具链/缓存 |
+| 📋 **任务模板库** | 高频任务固化成模板（内置 4 个：修测试 / PR 描述 / 代码评审 / 跑一遍并总结），支持自定义变量与标签；composer 输入 `/tpl` 选择即发送 |
+| 📊 **项目仪表盘** | 按工作区聚合：会话 × 目标（进行中/阻塞/完成）× todo × 轮次/步数 × 自动摘要，阻塞目标高亮；30s 自动刷新 |
+| ✍️ **会话自动摘要** | 每轮任务收尾自动生成 3 行摘要（目标/完成/下一步）入库；无摘要的会话可一键生成 |
+| ✅ **评审门禁** | 对工作区改动**逐文件审阅**：git 仓库以 HEAD 为基线，非 git 用复制基线；每文件查看 diff → 接受/拒绝 → 提交已接受（git commit）/ 放弃（全部恢复） |
 
 ## 安全（专业版）
 
-- **敏感信息排查**：推代码前自动把 `.env`、`*.pem`、`*.key`、`*secret*`、`*.token`、`.npmrc` 等模式追加到项目 `.git/info/exclude`（仅本地生效，不入仓库）
-- **Token**：只存本机 `config.json`；API 只回传 `hasToken`，不回传明文；推代码用一次性 URL 凭据，不写入仓库 `.git/config`
-- **路径边界**：文件浏览/版本浏览均校验在源目录或版本目录内（大小写归一防穿越）
+- **不收集、不上传任何数据**；摘要/模板/评审记录只存本机 Pro 数据目录（`DSH_PRO_DATA_DIR` 或 `%LOCALAPPDATA%\DeepSeek Harness Pro\data`）
+- **不写 DSH 会话日志**（DSH 持久化拒绝未知事件类型）
+- 评审的拒绝/放弃会真实改动工作区文件（git checkout / 恢复基线），提交才执行 git commit
+- git 命令数组传参（无 shell 注入）
 
 ## 测试与文档（专业版）
 
 ```powershell
-node pro-plugin\test\version.test.js   # VERSION TEST OK（23 项）
-node pro-plugin\test\host.test.js      # HOST TEST OK（41 项）
+node pro-plugin\test\run-all.js   # ALL TESTS PASSED（5 个套件）
 ```
 
 - 架构与 API 契约：[PRO-DESIGN.md](PRO-DESIGN.md)
 - 新手安装与使用：[start.md](start.md)（第一部分正式版 + 第二部分专业版）
-
 ## 许可
 
 MIT License，Copyright (c) 2026 DeepSeek。本桌面客户端基于 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness)（MIT）构建。

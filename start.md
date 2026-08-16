@@ -45,17 +45,17 @@ DeepSeek Harness 是深度求索（DeepSeek）出品的 AI 编程助手平台。
 
 ## 第二部分：专业版（进阶，可选）
 
-专业版 = 正式版 + 一个 **DSH 插件**（`@dsh-pro/desktop`），提供：
+专业版 = 正式版 + 一个 **DSH 插件**（`@dsh-pro/core`），提供：
 
-- 🧭 每个会话 = **子版本控制器**，完成任务**自动快照**
-- 🎛 左下角**总版本控制器**：管理最终版（查看/上传/推代码/回滚/删除）
-- 📂 右侧**文件区**：拉取的 git 仓库 + 本地文件夹，浏览源码
-- 📤 **GitHub 上传**（测试版 Release）与**推代码**（敏感信息自动排除）
+- 📋 **任务模板库**：高频任务固化成模板，composer 输入 `/tpl` 选择即发送
+- 📊 **项目仪表盘**：按工作区聚合会话 × 目标 × todo × 统计 × 自动摘要，阻塞高亮
+- ✍️ **会话自动摘要**：每轮任务完成自动生成 3 行摘要（目标/完成/下一步）
+- ✅ **评审门禁**：逐文件查看 diff → 接受/拒绝 → git commit（或放弃恢复）
 
 ### 安装专业版插件
 
 ```powershell
-# 1. 下载/解压插件包（Release v0.1.0-pro-test 里的 zip），或 clone 专业版分支：
+# 1. 下载/解压插件包（Release v0.1.1-pro 里的 zip），或 clone 专业版分支：
 #    git clone -b pro-v0.1 https://github.com/emomg/deepseek-harness-desktop.git D:\dsh\desktop-app
 
 # 2. 安装插件（把路径换成你的插件目录）
@@ -69,15 +69,13 @@ dsh --profile web --dump-config | Select-String dsh-pro
 
 ### 快速上手
 
-1. 重启后，DSH **侧边栏底部**出现「总版本控制器」，会话**头部**出现「版本」「文件区」
-2. 在「工作区」新建工作区（选一个项目目录）→ 会话干活 → **每轮任务完成自动快照**
-3. 总控制器 → 版本行「设最终」→ 最终版总览里可 **查看 / 上传 / 推代码 / 回滚 / 删除**
-4. 底部「GitHub 设置」填 `owner/repo` + Token → 上传发 Release（测试版）/ 推代码（敏感信息自动排除，如 `.env`）
-5. 会话头部「文件区」→ 「＋ 添加」→ 选 **git 仓库**（自动 clone）或**本地文件夹** → 浏览源码
+1. 重启后，DSH **侧边栏底部**出现「Pro 面板」（仪表盘 / 模板 / 评审 三个页签）
+2. 在「工作区」新建工作区（选一个项目目录）→ 会话干活 → **每轮任务完成自动生成摘要**，仪表盘自动聚合
+3. composer 输入 **`/tpl`** → 选模板 → 填变量 → 直接发送给 AI 执行
+4. 干完活 → Pro 面板「评审」→ 选工作区「开始评审」→ 逐文件看 diff → **接受/拒绝** → 「提交已接受」
+5. 想管模板：Pro 面板「模板」页新建/编辑/删除
 
-> 详细使用说明见 [README.md](README.md) 与 [PRO-DESIGN.md](PRO-DESIGN.md)。
-
----
+> 详细使用说明见 [README.md](README.md)。
 
 ## 常见问题
 
@@ -103,7 +101,7 @@ dsh --profile web --dump-config | Select-String dsh-pro
 答：必须**重启 dsh web**（插件只在启动时加载）；并确认 `dsh plugin` 需要 pnpm（`npm install -g pnpm` 或 `corepack enable`）。
 
 **问：正式版会受专业版影响吗？**
-答：不会。正式版（main / v0.1.0）与专业版（pro-v0.1 / v0.1.0-pro-test）是独立分支与独立 Release，并存互不覆盖。
+答：不会。正式版（main / v0.1.0）与专业版（pro-v0.1 / v0.1.1-pro）是独立分支与独立 Release，并存互不覆盖。
 
 **问：看不懂报错怎么办？**
 答：把报错文字截图发到 Issues：<https://github.com/emomg/deepseek-harness-desktop/issues>，会有人帮你。

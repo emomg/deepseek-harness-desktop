@@ -9,7 +9,7 @@ ${Using:StrFunc} UnStrRep
 
 !define APP_NAME "DeepSeek Harness Pro"
 !define APP_EXE "dsh-desktop.exe"
-!define APP_VERSION "0.1.0-pro-test"
+!define APP_VERSION "0.1.1-pro"
 !define APP_ID "com.deepseek-harness.desktop.pro"
 !define INST_DIR "$LOCALAPPDATA\Programs\DeepSeek Harness Pro"
 
@@ -20,11 +20,11 @@ Name "${APP_NAME}"
 OutFile "${SETUP_NAME}"
 InstallDir "${INST_DIR}"
 RequestExecutionLevel user
-VIProductVersion "0.1.0.0"
+VIProductVersion "0.1.1.0"
 VIAddVersionKey /LANG=2052 "ProductName" "DeepSeek Harness Desktop"
 VIAddVersionKey /LANG=2052 "FileDescription" "DeepSeek Harness 桌面客户端安装程序"
-VIAddVersionKey /LANG=2052 "FileVersion" "0.1.0"
-VIAddVersionKey /LANG=2052 "ProductVersion" "0.1.0"
+VIAddVersionKey /LANG=2052 "FileVersion" "0.1.1"
+VIAddVersionKey /LANG=2052 "ProductVersion" "0.1.1"
 VIAddVersionKey /LANG=2052 "LegalCopyright" "Copyright (c) 2026 DeepSeek (MIT)"
 
 !define MUI_ICON "..\src-tauri\icons\icon.ico"
