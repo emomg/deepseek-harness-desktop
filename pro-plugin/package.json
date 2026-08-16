@@ -1,0 +1,34 @@
+{
+  "name": "@dsh-pro/desktop",
+  "description": "DeepSeek Harness Pro：项目档案（工作区目录 + 会话对话）版本管理与项目控制器 —— DSH 向 IDE 的延伸",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./client": "./lib/client.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib"
+  ],
+  "license": "MIT",
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "inject": [
+        "@deepseek-ai/dsh-client-runtime"
+      ],
+      "platform": "web"
+    }
+  },
+  "peerDependencies": {
+    "@deepseek-ai/dsh-host-webserver": "^0.1.0-rc.6",
+    "@deepseek-ai/dsh-workspace": "^0.1.0-rc.6"
+  },
+  "scripts": {
+    "test": "node test/version.test.js"
+  }
+}

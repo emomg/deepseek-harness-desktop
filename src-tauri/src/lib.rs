@@ -29,6 +29,23 @@ fn update_repo_label() -> &'static str {
 /// 当前桌面壳版本（Cargo.toml 的 version）。
 const APP_VERSION: &str = env!("CARGO_PKG_VERSION");
 
+/// 运行日志（exe 同目录 dsh-pro.log）：记录启动/窗口/退出事件，便于诊断。
+pub(crate) fn pro_log(line: &str) {
+    use std::io::Write;
+    let path = std::env::current_exe()
+        .ok()
+        .map(|p| p.with_file_name("dsh-pro.log"))
+        .unwrap_or_else(|| std::path::PathBuf::from("dsh-pro.log"));
+    if let Ok(mut f) = std::fs::OpenOptions::new().create(true).append(true).open(&path) {
+        let ts = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map(|d| d.as_millis())
+            .unwrap_or(0);
+        let _ = writeln!(f, "[{ts}] {line}");
+    }
+    eprintln!("[dsh-pro] {line}");
+}
+
 /// 用捆绑/系统的 node 跑一小段 fetch 脚本，取 GitHub 最新 release 的 tag 和页面。
 /// 返回 (tag, html_url)；任何一步失败返回 None（网络不可用、node 缺失等，均静默）。
 fn fetch_latest_release(prefer_full: bool) -> Option<(String, String, Option<String>, Option<String>)> {
@@ -269,7 +286,7 @@ fn run_update_check(app: tauri::AppHandle) {
 /// 桌面端自己拉起的 dsh 子进程；如果端口本来就活着则不拉起，也不负责杀掉。
 struct DshServer(Mutex<Option<Child>>);
 
-fn port_alive() -> bool {
+pub(crate) fn port_alive() -> bool {
     TcpStream::connect_timeout(&DSH_ADDR.parse().unwrap(), Duration::from_millis(400)).is_ok()
 }
 
@@ -435,6 +452,7 @@ pub fn run() {
     }));
     let app = tauri::Builder::default()
         .setup(|app| {
+            pro_log("app starting");
             app.manage(DshServer(Mutex::new(None)));
 
             // 主窗口立即创建并显示占位页（"正在启动 DSH 服务…"），避免窗口迟迟不出现
@@ -479,8 +497,9 @@ pub fn run() {
                 });
             });
 
-            // 启动后静默检查一次桌面版更新（后台线程，不阻塞；有新版本才提示）
-            {
+            // 启动后静默检查一次桌面版更新（后台线程，不阻塞；有新版本才提示）。
+            // 环境变量 DSH_PRO_DISABLE_UPDATE=1 可关闭（测试/无网/不想被打扰时）。
+            if std::env::var_os("DSH_PRO_DISABLE_UPDATE").is_none() {
                 let handle = app.handle().clone();
                 std::thread::spawn(move || {
                     std::thread::sleep(Duration::from_secs(5));
@@ -488,7 +507,7 @@ pub fn run() {
                 });
             }
 
-            // 托盘：检查更新 / 显示窗口 / 退出
+            // 托盘：显示主窗口 / 检查更新 / 退出
             let update_item = match MenuItem::with_id(app, "update-check", "检查更新", true, None::<&str>)
             {
                 Ok(i) => i,

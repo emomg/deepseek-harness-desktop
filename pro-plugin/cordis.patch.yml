@@ -1,0 +1,7 @@
+# @dsh-pro/desktop 插件行：插入宿主插件（版本管理/档案）+ 客户端插件（控制器/头部按钮）。
+# 安装：dsh plugin --profile web add link:D:\dsh\desktop-app\pro-plugin
+#   并把 "@dsh-pro/desktop" 追加到 profile package.json 的 dsh.profile.bundles。
+
+- insert:
+    - id: dsh-pro
+      name: '@dsh-pro/desktop'
