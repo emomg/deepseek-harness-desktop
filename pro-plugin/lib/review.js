@@ -1,7 +1,9 @@
-//! @dsh-pro/core · review：评审门禁。
-//! 基线：git 仓库 → HEAD；非 git 仓库 → 数据目录下的复制基线。
-//! 差异：git → git diff HEAD -- <file>；非 git → 复制基线 vs 当前文件（纯 JS 行 diff）。
-//! 接受 = git add / 记录；拒绝 = git checkout / 恢复基线；提交 = git commit（仅已接受）。
+//! @dsh-pro/core · review：评审门禁（按会话评审）。
+//! 基线：git 仓库 → 会话开始时的提交（baselines.json 记录，无记录退化为当前 HEAD）；
+//!       非 git 仓库 → 数据目录下的复制基线。
+//! 差异：git → git diff <基线提交> -- <file>（= 该会话期间改了什么）；
+//!       非 git → 复制基线 vs 当前文件（纯 JS 行 diff）。
+//! 接受 = git add / 记录；拒绝 = git checkout <基线提交> / 恢复基线；提交 = git commit（仅已接受）。
 //! 规则：同一工作区同时只允许一个进行中的评审。
 //! deps.git 可注入（无头测试用 fake），默认真实 git.js。
 
@@ -16,6 +18,38 @@ function gitOps(deps) {
 
 export function reviewsDoc() {
   return jsonDoc(dataDir(), "reviews.json", { reviews: [] });
+}
+
+/** 会话基线：sessionId → { workspacePath, commit, capturedAt }（git 仓库）。 */
+export function baselinesDoc() {
+  return jsonDoc(dataDir(), "baselines.json", { bySession: {} });
+}
+
+/** 捕获某会话的 git 基线（会话开始时的 HEAD 提交）。非 git 仓库返回 null。 */
+export async function captureSessionBaseline(deps, sessionId, workspacePath) {
+  try {
+    const G = gitOps(deps);
+    const resolved = path.resolve(workspacePath);
+    if (!(await fs.stat(resolved).catch(() => null))?.isDirectory()) return null;
+    if (!(await G.isGitRepo(resolved))) return null;
+    if (await G.isEmptyRepo(resolved)) return null;
+    const commit = await G.headOf(resolved);
+    if (!commit) return null;
+    const doc = baselinesDoc();
+    const data = await doc.load();
+    data.bySession[sessionId] = { workspacePath: resolved, commit, capturedAt: Date.now() };
+    await doc.save(data);
+    return data.bySession[sessionId];
+  } catch {
+    return null;
+  }
+}
+
+/** 读某会话已捕获的基线（无则 null）。 */
+export async function sessionBaselineOf(deps, sessionId) {
+  if (!sessionId) return null;
+  const data = await baselinesDoc().load();
+  return data.bySession[sessionId] ?? null;
 }
 
 function baselineDir(id) {
@@ -56,8 +90,16 @@ export async function startReview(deps, { workspacePath, sessionId }) {
     if (empty) {
       review.baseline = await captureCopyBaseline(deps, review.id, resolved);
     } else {
-      const head = await G.headOf(resolved);
-      review.baseline = { type: "git", head };
+      // 按会话评审：优先用会话开始时的提交（该会话期间改了什么）；
+      // 无会话基线记录时退化为当前 HEAD。
+      const sessionBase = sessionId ? await sessionBaselineOf(deps, sessionId) : null;
+      const commit = sessionBase?.commit && sessionBase.workspacePath
+        ? path.resolve(sessionBase.workspacePath).toLowerCase() === resolved.toLowerCase()
+          ? sessionBase.commit
+          : null
+        : null;
+      const base = commit ?? (await G.headOf(resolved));
+      review.baseline = { type: "git", commit: base, sessionBaseline: !!commit };
     }
   } else {
     review.baseline = await captureCopyBaseline(deps, review.id, resolved);
@@ -93,7 +135,7 @@ export async function refreshFiles(deps, review, resolvedPath) {
   const G = gitOps(deps);
   const dir = resolvedPath ?? path.resolve(review.workspacePath);
   if (review.baseline?.type === "git") {
-    const r = await G.changedFiles(dir);
+    const r = await G.changedFiles(dir, review.baseline.commit);
     const next = {};
     for (const f of r.ok ? r.files : []) {
       const prev = review.files[f.path];
@@ -151,7 +193,7 @@ export async function reviewFileDiff(deps, review, file) {
   await refreshFiles(deps, review);
   if (!review.files[file]) throw new Error("文件不在评审差异中: " + file);
   if (review.baseline?.type === "git") {
-    const r = await G.fileDiff(path.resolve(review.workspacePath), file);
+    const r = await G.fileDiff(path.resolve(review.workspacePath), file, review.baseline.commit);
     return r.ok ? r.text : "无法生成差异: " + r.error;
   }
   const base = path.join(baselineDir(review.id), file);
@@ -190,7 +232,7 @@ export async function rejectFile(deps, review, file) {
   if (review.status !== "open") throw new Error("评审已关闭");
   if (!review.files[file]) throw new Error("文件不在评审差异中: " + file);
   if (review.baseline?.type === "git") {
-    const r = await G.discardFile(dir, file);
+    const r = await G.discardFile(dir, file, review.baseline.commit);
     if (!r.ok) throw new Error("git 恢复失败: " + r.error);
   } else {
     const base = path.join(baselineDir(review.id), file);
@@ -235,7 +277,7 @@ export async function discardReview(deps, review) {
   for (const [file] of pending) {
     try {
       if (review.baseline?.type === "git") {
-        await G.discardFile(dir, file);
+        await G.discardFile(dir, file, review.baseline.commit);
       } else {
         const base = path.join(baselineDir(review.id), file);
         const cur = path.join(dir, file);
