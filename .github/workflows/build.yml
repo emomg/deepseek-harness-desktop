@@ -23,7 +23,7 @@ jobs:
         working-directory: src-tauri
         run: cargo build --release
 
-      - name: Stage built-in plugins (slim: sources only)
+      - name: "Stage built-in plugins (slim: sources only)"
         shell: pwsh
         run: |
           # 内置插件源码目录（正式版：dsh-files + dsh-plugin-image-input）
