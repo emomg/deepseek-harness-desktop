@@ -1,4 +1,4 @@
-# DeepSeek Harness Desktop
+# DeepSeek Harness Desktop(更新中，暂时不要下载安装包)
 
 
 基于 **Tauri 2 + Rust** 构建的 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) 原生 Windows 桌面客户端（黑鲸鱼图标）。
