@@ -1,5 +1,5 @@
-# DeepSeek Harness Desktop
-#**更新出问题，暂时别下载**
+# DeepSeek Harness Desktop (更新出问题，暂时别下载)
+
 
 基于 **Tauri 2 + Rust** 构建的 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) 原生 Windows 桌面客户端（黑鲸鱼图标）。
 
@@ -17,6 +17,7 @@
 |---|---|---|
 | **正式版 v0.1.0** `v0.1.0` | [Setup-0.1.0-full.exe](https://github.com/emomg/deepseek-harness-desktop/releases/tag/v0.1.0)（约 100MB）<br>[Setup-0.1.0.exe](https://github.com/emomg/deepseek-harness-desktop/releases/tag/v0.1.0)（约 4MB） | **两个安装包都提供**：full 版自带 Node/dsh 运行时免预装；精简版需本机 Node ≥ 18 |
 | **专业版 v0.1.1（测试版）** `v0.1.1-pro` | [Setup-0.1.1-pro.exe](https://github.com/emomg/deepseek-harness-desktop/releases/tag/v0.1.1-pro)（约 4MB）<br>[插件包 zip](https://github.com/emomg/deepseek-harness-desktop/releases/tag/v0.1.1-pro) | 精简安装包（需 Node ≥ 18）；已有 DSH 环境可只装插件 zip |
+<br>**更新出问题，暂时别下载**
 
 > 小白完整安装指引见 [start.md](start.md)。
 
