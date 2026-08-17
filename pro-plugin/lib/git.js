@@ -128,6 +128,39 @@ export function shouldExclude(name) {
   );
 }
 
+/**
+ * 评审范围过滤：复制基线下不纳入评审的文件。
+ * 1) 二进制/产物扩展名（diff 无意义、体积大）；
+ * 2) 超大文件（超过 MAX_REVIEW_FILE_BYTES，避免基线膨胀与逐字节哈希）。
+ */
+export const REVIEW_EXCLUDE_EXTENSIONS = new Set([
+  // 可执行/库/中间产物
+  "exe", "dll", "so", "dylib", "a", "lib", "obj", "o", "pdb", "node", "wasm", "pak",
+  "class", "jar", "war", "ear", "pyc", "pyo", "dmp", "core",
+  // 打包/压缩/安装器
+  "zip", "7z", "gz", "tgz", "bz2", "xz", "rar", "tar", "iso", "img", "bin",
+  "msi", "msix", "apk", "aab", "dmg", "pkg", "deb", "rpm", "nupkg", "whl", "egg",
+  // 媒体/图片/字体/文档（二进制，行 diff 无意义）
+  "png", "jpg", "jpeg", "gif", "webp", "bmp", "ico", "tif", "tiff", "avif", "heic", "icns",
+  "mp4", "mov", "avi", "mkv", "webm", "mp3", "wav", "flac", "aac", "ogg", "m4a",
+  "pdf", "woff", "woff2", "ttf", "otf", "eot",
+  // 二进制数据库
+  "sqlite", "sqlite3", "db", "mdb",
+]);
+
+/** 单个文件纳入评审的最大字节数（超过则跳过，防基线膨胀/哈希拖慢）。 */
+export const MAX_REVIEW_FILE_BYTES = 5 * 1024 * 1024;
+
+/** rel 相对路径 + 当前大小 → 是否纳入评审（false 则基线/差异均忽略）。 */
+export function isReviewableFile(rel, size) {
+  const name = String(rel ?? "");
+  const dot = name.lastIndexOf(".");
+  const ext = dot >= 0 ? name.slice(dot + 1).toLowerCase() : "";
+  if (REVIEW_EXCLUDE_EXTENSIONS.has(ext)) return false;
+  if (typeof size === "number" && size > MAX_REVIEW_FILE_BYTES) return false;
+  return true;
+}
+
 /** 递归收集目录下所有文件（排除忽略项），返回相对路径列表。 */
 export async function listFilesRecursive(root, prefix = "") {
   const out = [];

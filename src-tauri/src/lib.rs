@@ -283,11 +283,30 @@ fn run_update_check(app: tauri::AppHandle) {
     }
 }
 
-/// 桌面端自己拉起的 dsh 子进程；如果端口本来就活着则不拉起，也不负责杀掉。
+/// 桌面端自己拉起的 dsh 子进程；如果端口本来就活着则不拉起。
+/// 退出应用时**保留**该进程（见 RunEvent::Exit）：dsh web 常驻后台，
+/// 下次打开桌面端秒连，不再每次冷启动等几十秒；移动端也可随时连接。
 struct DshServer(Mutex<Option<Child>>);
 
+/// 服务是否真正可用：TCP 握手 + 一次 HTTP GET /（读到响应才算就绪）。
+/// 仅 TCP connect 成功太早 —— socket 先于业务路由监听，浏览器会命中
+/// 半启动的服务（无 boot manifest、请求挂起），表现为启动更慢/白屏。
 pub(crate) fn port_alive() -> bool {
-    TcpStream::connect_timeout(&DSH_ADDR.parse().unwrap(), Duration::from_millis(400)).is_ok()
+    use std::io::{Read, Write};
+    let Ok(mut stream) = TcpStream::connect_timeout(&DSH_ADDR.parse().unwrap(), Duration::from_millis(400))
+    else {
+        return false;
+    };
+    let _ = stream.set_read_timeout(Some(Duration::from_millis(800)));
+    let _ = stream.set_write_timeout(Some(Duration::from_millis(800)));
+    if stream.write_all(b"GET / HTTP/1.1\r\nHost: 127.0.0.1\r\nConnection: close\r\n\r\n").is_err() {
+        return false;
+    }
+    let mut buf = [0u8; 128];
+    match stream.read(&mut buf) {
+        Ok(n) => n > 0,
+        Err(_) => false,
+    }
 }
 
 fn wait_for_port(timeout: Duration) -> bool {
@@ -296,7 +315,7 @@ fn wait_for_port(timeout: Duration) -> bool {
         if port_alive() {
             return true;
         }
-        std::thread::sleep(Duration::from_millis(400));
+        std::thread::sleep(Duration::from_millis(100));
     }
     port_alive()
 }
@@ -599,12 +618,13 @@ pub fn run() {
 
     app.run(|app_handle, event| {
         if let RunEvent::Exit = event {
-            // 只清理桌面端自己拉起的 dsh 进程
+            // 保留 dsh web 后台服务（下次启动秒连；如需完全停止：任务管理器结束 node.exe）。
+            // 不再 kill 自己拉起的子进程：std 的 Child 被 drop 不会终止进程，
+            // 这里显式丢弃句柄即可让服务继续常驻。
             if let Some(state) = app_handle.try_state::<DshServer>() {
                 if let Ok(mut guard) = state.0.lock() {
-                    if let Some(mut child) = guard.take() {
-                        let _ = child.kill();
-                        let _ = child.wait();
+                    if let Some(child) = guard.take() {
+                        drop(child);
                     }
                 }
             }

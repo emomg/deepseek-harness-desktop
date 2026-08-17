@@ -8,7 +8,15 @@ export async function run() {
   try {
     const routes = new Map();
     const events = {};
-    const live = fakeSession({ id: "s1", title: "会话A", messages: [] });
+    const msgs = [];
+    const live = fakeSession({ id: "s1", title: "会话A", messages: msgs });
+    const fakeAgent = {
+      status: "inactive",
+      followups: [],
+      cancels: 0,
+      followup(m) { this.followups.push(m); this.status = "running"; },
+      cancel() { this.cancels++; this.status = "inactive"; },
+    };
     const ctx = {
       workspaceRegistry: {
         list: () => [{ id: "w1", path: "C:\\proj", title: "proj", sessionIds: ["s1"] }],
@@ -20,6 +28,7 @@ export async function run() {
         },
       },
       sessions: { get: (id) => (id === "s1" ? live : undefined), list: () => [live] },
+      agents: { get: (id) => (id === "s1" ? fakeAgent : undefined) },
       sessionPersistence: { readRaw: async () => null },
       llm: null,
       sessionProjections: { snapshot: () => ({ values: {} }) },
@@ -28,13 +37,12 @@ export async function run() {
     };
     apply(ctx);
 
-    // 路由都注册了
+    // 路由都注册了（评审为任务式：start/list/detail/terminate/end）
     const expectPaths = [
       "/api/pro/state", "/api/pro/templates", "/api/pro/template", "/api/pro/template/delete",
       "/api/pro/template/fill", "/api/pro/summaries", "/api/pro/summaries/generate",
       "/api/pro/dashboard", "/api/pro/review/start", "/api/pro/review/list",
-      "/api/pro/review", "/api/pro/review/diff", "/api/pro/review/accept",
-      "/api/pro/review/reject", "/api/pro/review/commit", "/api/pro/review/discard",
+      "/api/pro/review", "/api/pro/review/terminate", "/api/pro/review/end",
     ];
     for (const p of expectPaths) assert.ok(routes.has(p), "路由存在: " + p);
 
@@ -42,7 +50,7 @@ export async function run() {
     let res = fakeRes();
     await routes.get("/api/pro/templates").handler(fakeReq("GET", "/api/pro/templates"), res);
     assert.equal(res.result().code, 200);
-    assert.ok(res.result().body.templates.length >= 4, "内置模板已种子");
+    assert.ok(res.result().body.templates.length >= 5, "内置模板已种子（>=5）");
 
     res = fakeRes();
     await routes.get("/api/pro/templates").handler(
@@ -67,22 +75,20 @@ export async function run() {
       fakeReq("POST", "/api/pro/summaries/generate", { sessionId: "s1" }), res);
     assert.ok(res.result().code === 400, "无 llm 时返回 400 而非 500");
 
-    // 评审：非 git 目录（用数据目录下建的工作区）
-    const { promises: fs } = await import("node:fs");
-    const path = await import("node:path");
-    const ws = path.join(t.dir, "ws");
-    await fs.mkdir(ws, { recursive: true });
-    await fs.writeFile(path.join(ws, "f.txt"), "v1\n", "utf8");
+    // 评审：任务式（默认模板「评审：测试+安全」投递会话 AI）
     res = fakeRes();
     await routes.get("/api/pro/review/start").handler(
-      fakeReq("POST", "/api/pro/review/start", { workspacePath: ws, sessionId: "s1" }), res);
+      fakeReq("POST", "/api/pro/review/start", { sessionId: "s1" }), res);
     assert.equal(res.result().code, 200, "评审开始成功: " + JSON.stringify(res.result().body));
     const revId = res.result().body.review.id;
+    assert.equal(res.result().body.review.status, "running");
+    assert.ok(fakeAgent.followups.length === 1, "已投递评审任务到会话 agent");
+    assert.ok(fakeAgent.followups[0].content[0].text.includes("npm test"), "prompt 含预置测试命令");
 
     res = fakeRes();
     await routes.get("/api/pro/review").handler(fakeReq("GET", "/api/pro/review?id=" + revId), res);
     assert.equal(res.result().code, 200);
-    assert.equal(res.result().body.review.status, "open");
+    assert.equal(res.result().body.review.status, "running");
 
     // 评审列表应补充会话标题（单列表展示会话内容用）
     res = fakeRes();
@@ -91,18 +97,25 @@ export async function run() {
     const listed = res.result().body.reviews.find((rv) => rv.id === revId);
     assert.equal(listed.sessionTitle, "会话A", "review list 携带 sessionTitle");
 
-    // 修改文件后 diff 路由
-    await fs.writeFile(path.join(ws, "f.txt"), "v2\n", "utf8");
+    // AI 完成（agent inactive + 会话出现 assistant 报告）→ 状态 done
+    msgs.push({ role: "assistant", content: [{ type: "text", text: "测试通过\n结论：通过" }] });
+    fakeAgent.status = "inactive";
     res = fakeRes();
     await routes.get("/api/pro/review").handler(fakeReq("GET", "/api/pro/review?id=" + revId), res);
-    const files = res.result().body.review.files;
-    assert.ok(files.some((f) => f.path === "f.txt"), "f.txt 出现在差异中");
+    assert.equal(res.result().body.review.status, "done", "AI 回合结束 → done");
+    assert.ok(res.result().body.review.report.includes("测试通过"), "报告已提取");
 
+    // 终止：中断 AI 回合
     res = fakeRes();
-    await routes.get("/api/pro/review/diff").handler(
-      fakeReq("GET", "/api/pro/review/diff?id=" + revId + "&file=f.txt"), res);
+    await routes.get("/api/pro/review/start").handler(
+      fakeReq("POST", "/api/pro/review/start", { sessionId: "s1" }), res);
+    const revId2 = res.result().body.review.id;
+    res = fakeRes();
+    await routes.get("/api/pro/review/terminate").handler(
+      fakeReq("POST", "/api/pro/review/terminate", { id: revId2 }), res);
     assert.equal(res.result().code, 200);
-    assert.ok(res.result().body.diff.includes("v2"), "diff 包含 v2");
+    assert.equal(res.result().body.review.status, "terminated");
+    assert.ok(fakeAgent.cancels >= 1, "调用了 agent.cancel");
 
     // 事件订阅存在（自动摘要触发点）
     assert.equal(typeof events["agent/turn-stopping"], "function", "订阅了 agent/turn-stopping");

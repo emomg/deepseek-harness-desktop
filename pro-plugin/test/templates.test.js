@@ -11,7 +11,7 @@ export async function run() {
     // 种子
     await templates.ensureSeeded(doc);
     const seeded = await templates.listTemplates(doc);
-    assert.ok(seeded.length >= 4, "内置模板 >= 4");
+    assert.ok(seeded.length >= 5, "内置模板 >= 5");
     // 创建
     const created = await templates.createTemplate(doc, {
       name: "冒烟测试",
@@ -20,6 +20,11 @@ export async function run() {
     });
     assert.ok(created.id, "有 id");
     assert.equal(created.name, "冒烟测试");
+    // 内置「评审：测试+安全」模板可用默认变量填充
+    const rtpl = await templates.getTemplate(doc, "tpl-review-task");
+    assert.ok(rtpl, "内置评审模板存在");
+    const filledReview = templates.fillTemplate(rtpl, {});
+    assert.ok(filledReview.includes("npm test") && filledReview.includes("npm audit"), "评审模板默认变量填充");
     // 重复 id 报错
     await assert.rejects(() => templates.createTemplate(doc, { id: created.id, name: "x", prompt: "y" }));
     // 填充

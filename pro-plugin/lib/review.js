@@ -1,299 +1,104 @@
-//! @dsh-pro/core · review：评审门禁（按会话评审）。
-//! 基线：git 仓库 → 会话开始时的提交（baselines.json 记录，无记录退化为当前 HEAD）；
-//!       非 git 仓库 → 数据目录下的复制基线。
-//! 差异：git → git diff <基线提交> -- <file>（= 该会话期间改了什么）；
-//!       非 git → 复制基线 vs 当前文件（纯 JS 行 diff）。
-//! 接受 = git add / 记录；拒绝 = git checkout <基线提交> / 恢复基线；提交 = git commit（仅已接受）。
-//! 规则：同一工作区同时只允许一个进行中的评审。
-//! deps.git 可注入（无头测试用 fake），默认真实 git.js。
+//! @dsh-pro/core · review v2：任务式评审（跑测试 + 安全检查，可随时终止/结束）。
+//! 评审 = 把评审 prompt（来自模板，默认内置「评审：测试+安全」，含预置命令清单）
+//!       发给会话 AI（agent.followup），AI 在会话里跑测试/查安全并出报告；
+//!       评审页可随时「终止」（agent.cancel 中断 AI 回合）或「结束」（手动收尾）。
+//! 状态机：running → done（AI 回合结束）/ terminated（用户终止）/ ended（用户结束）。
+//! deps = { agents, sessions } 可注入（无头测试用 fake），默认真实 ctx 服务。
+//! 评审记录只存 Pro 数据目录（reviews.json），不写 DSH 会话日志。
 
-import { promises as fs } from "node:fs";
-import path from "node:path";
+import crypto from "node:crypto";
 import { jsonDoc, dataDir, newId } from "./store.js";
-import * as realGit from "./git.js";
+import * as templates from "./templates.js";
 
-function gitOps(deps) {
-  return deps?.git ?? realGit;
-}
+// ---------------------------------------------------------------- 状态
+
+export const STATUS = {
+  RUNNING: "running",
+  DONE: "done",
+  TERMINATED: "terminated",
+  ENDED: "ended",
+};
+
+/** 评审默认使用的模板 id（内置「评审：测试+安全」）。 */
+export const REVIEW_TEMPLATE_ID = "tpl-review-task";
 
 export function reviewsDoc() {
   return jsonDoc(dataDir(), "reviews.json", { reviews: [] });
 }
 
-/** 会话基线：sessionId → { workspacePath, commit, capturedAt }（git 仓库）。 */
-export function baselinesDoc() {
-  return jsonDoc(dataDir(), "baselines.json", { bySession: {} });
-}
+// ---------------------------------------------------------------- 工具
 
-/** 捕获某会话的 git 基线（会话开始时的 HEAD 提交）。非 git 仓库返回 null。 */
-export async function captureSessionBaseline(deps, sessionId, workspacePath) {
-  try {
-    const G = gitOps(deps);
-    const resolved = path.resolve(workspacePath);
-    if (!(await fs.stat(resolved).catch(() => null))?.isDirectory()) return null;
-    if (!(await G.isGitRepo(resolved))) return null;
-    if (await G.isEmptyRepo(resolved)) return null;
-    const commit = await G.headOf(resolved);
-    if (!commit) return null;
-    const doc = baselinesDoc();
-    const data = await doc.load();
-    data.bySession[sessionId] = { workspacePath: resolved, commit, capturedAt: Date.now() };
-    await doc.save(data);
-    return data.bySession[sessionId];
-  } catch {
-    return null;
-  }
-}
-
-/** 读某会话已捕获的基线（无则 null）。 */
-export async function sessionBaselineOf(deps, sessionId) {
-  if (!sessionId) return null;
-  const data = await baselinesDoc().load();
-  return data.bySession[sessionId] ?? null;
-}
-
-function baselineDir(id) {
-  return path.join(dataDir(), "reviews", id, "baseline");
-}
-
-/** 工作区是否已存在进行中的评审。 */
-export function hasOpenReview(data, workspacePath) {
-  const p = path.resolve(workspacePath).toLowerCase();
-  return data.reviews.some((r) => r.status === "open" && path.resolve(r.workspacePath).toLowerCase() === p);
-}
-
-/** 开始评审：捕获基线。 */
-export async function startReview(deps, { workspacePath, sessionId }) {
-  const G = gitOps(deps);
-  const resolved = path.resolve(workspacePath);
-  if (!(await fs.stat(resolved).catch(() => null))?.isDirectory()) {
-    throw new Error("工作区目录不存在: " + workspacePath);
-  }
-  const data = await reviewsDoc().load();
-  if (hasOpenReview(data, resolved)) {
-    throw new Error("该工作区已有进行中的评审，请先提交或放弃");
-  }
-  const review = {
-    id: newId("rev"),
-    workspacePath: resolved,
-    sessionId: sessionId ?? null,
-    createdAt: Date.now(),
-    status: "open",
-    baseline: null,
-    files: {},
-    message: null,
-    committedAt: null,
+/** 构造投递给 agent 的 user message（形状对齐 dsh-llm createUserMessage，零依赖）。 */
+export function makeUserMessage(text) {
+  return {
+    id: crypto.randomUUID(),
+    role: "user",
+    content: [{ type: "text", text: String(text ?? "") }],
+    source: { kind: "user" },
   };
-  const git = await G.isGitRepo(resolved);
-  if (git) {
-    const empty = await G.isEmptyRepo(resolved);
-    if (empty) {
-      review.baseline = await captureCopyBaseline(deps, review.id, resolved);
-    } else {
-      // 按会话评审：优先用会话开始时的提交（该会话期间改了什么）；
-      // 无会话基线记录时退化为当前 HEAD。
-      const sessionBase = sessionId ? await sessionBaselineOf(deps, sessionId) : null;
-      const commit = sessionBase?.commit && sessionBase.workspacePath
-        ? path.resolve(sessionBase.workspacePath).toLowerCase() === resolved.toLowerCase()
-          ? sessionBase.commit
-          : null
-        : null;
-      const base = commit ?? (await G.headOf(resolved));
-      review.baseline = { type: "git", commit: base, sessionBaseline: !!commit };
-    }
-  } else {
-    review.baseline = await captureCopyBaseline(deps, review.id, resolved);
-  }
-  await refreshFiles(deps, review, resolved);
-  data.reviews.push(review);
-  await reviewsDoc().save(data);
-  return review;
 }
 
-async function captureCopyBaseline(deps, id, resolved) {
-  const G = gitOps(deps);
-  const dest = baselineDir(id);
-  await fs.mkdir(dest, { recursive: true });
-  const files = await G.listFilesRecursive(resolved);
-  let copied = 0;
-  for (const rel of files) {
-    const from = path.join(resolved, rel);
-    const to = path.join(dest, rel);
-    try {
-      await fs.mkdir(path.dirname(to), { recursive: true });
-      await fs.copyFile(from, to);
-      copied++;
-    } catch {
-      /* 单个文件失败忽略 */
-    }
+/** 从会话派生的消息里取最后一条 assistant 文本（评审报告）。 */
+export function reportOfSession(session) {
+  if (!session) return "";
+  let messages = [];
+  try {
+    messages = typeof session.deriveMessages === "function" ? session.deriveMessages() : [];
+  } catch {
+    messages = [];
   }
-  return { type: "copy", fileCount: copied };
-}
-
-/** 刷新评审的文件状态（差异列表）。 */
-export async function refreshFiles(deps, review, resolvedPath) {
-  const G = gitOps(deps);
-  const dir = resolvedPath ?? path.resolve(review.workspacePath);
-  if (review.baseline?.type === "git") {
-    const r = await G.changedFiles(dir, review.baseline.commit);
-    const next = {};
-    for (const f of r.ok ? r.files : []) {
-      const prev = review.files[f.path];
-      next[f.path] = { status: f.status, decision: prev?.decision ?? "pending" };
-    }
-    review.files = next;
-    return review;
-  }
-  // 复制基线
-  const base = baselineDir(review.id);
-  const baseFiles = await G.listFilesRecursive(base);
-  const currentFiles = await G.listFilesRecursive(dir);
-  const next = {};
-  for (const rel of baseFiles) {
-    const curPath = path.join(dir, rel);
-    const curExists = await fs.stat(curPath).catch(() => null);
-    const baseHash = await G.hashFile(path.join(base, rel)).catch(() => null);
-    if (!curExists) {
-      next[rel] = { status: "D", decision: review.files[rel]?.decision ?? "pending" };
-    } else {
-      const curHash = await G.hashFile(curPath).catch(() => null);
-      if (curHash !== baseHash) {
-        next[rel] = { status: "M", decision: review.files[rel]?.decision ?? "pending" };
+  for (let i = messages.length - 1; i >= 0; i--) {
+    const m = messages[i];
+    if (!m || m.role !== "assistant") continue;
+    let text = "";
+    const content = m.content;
+    if (Array.isArray(content)) {
+      for (const block of content) {
+        if (block && typeof block.text === "string") text += block.text;
       }
+    } else if (typeof content === "string") {
+      text = content;
     }
+    text = text.trim();
+    if (text) return text;
   }
-  for (const rel of currentFiles) {
-    if (!baseFiles.includes(rel)) {
-      next[rel] = { status: "A", decision: review.files[rel]?.decision ?? "pending" };
-    }
-  }
-  review.files = next;
-  return review;
+  return "";
 }
 
-/** 评审列表（按创建时间倒序）。 */
-export async function listReviews(deps) {
-  const data = await reviewsDoc().load();
-  return [...data.reviews].sort((a, b) => b.createdAt - a.createdAt);
+/**
+ * 迁移旧版门禁记录（v1：status ∈ open/committed/discarded，带 baseline/files）→ 新格式：
+ * 置为 ended（已结束），剥离门禁字段，并尽力清理其复制基线目录（v1 遗留，可能很大）。
+ * 返回是否发生变化。
+ */
+export async function normalizeReview(rev) {
+  if (!rev) return false;
+  const legacy = rev.baseline !== undefined || rev.files !== undefined || ["open", "committed", "discarded"].includes(rev.status);
+  if (!legacy) return false;
+  if (rev.status !== "ended") {
+    rev.status = "ended";
+    rev.endedAt = rev.endedAt ?? Date.now();
+  }
+  delete rev.baseline;
+  delete rev.files;
+  delete rev.message;
+  delete rev.committedAt;
+  // 尽力清理 v1 复制基线目录（reviews/<id>/baseline）
+  try {
+    const { promises: fs2 } = await import("node:fs");
+    const path2 = await import("node:path");
+    const dir = path2.join(dataDir(), "reviews", rev.id, "baseline");
+    await fs2.rm(dir, { recursive: true, force: true });
+  } catch {
+    /* 清理失败不影响评审 */
+  }
+  return true;
 }
 
-/** 取单个评审。 */
-export async function getReview(deps, id) {
+/** 按 id 取评审记录（纯读，不刷新状态）。 */
+async function findReview(id) {
   const data = await reviewsDoc().load();
   const review = data.reviews.find((r) => r.id === id);
   if (!review) throw new Error("评审不存在: " + id);
-  await refreshFiles(deps, review);
-  await reviewsDoc().save(data);
-  return review;
-}
-
-/** 单文件差异文本。 */
-export async function reviewFileDiff(deps, review, file) {
-  const G = gitOps(deps);
-  await refreshFiles(deps, review);
-  if (!review.files[file]) throw new Error("文件不在评审差异中: " + file);
-  if (review.baseline?.type === "git") {
-    const r = await G.fileDiff(path.resolve(review.workspacePath), file, review.baseline.commit);
-    return r.ok ? r.text : "无法生成差异: " + r.error;
-  }
-  const base = path.join(baselineDir(review.id), file);
-  const cur = path.join(path.resolve(review.workspacePath), file);
-  const baseExists = await fs.stat(base).catch(() => null);
-  const curExists = await fs.stat(cur).catch(() => null);
-  if (!baseExists && !curExists) return "(文件不存在)";
-  if (!baseExists) return "(新增文件，无基线版本)\n\n[当前内容]\n" + (await fs.readFile(cur, "utf8").catch(() => ""));
-  if (!curExists) return "(已删除文件)\n\n[基线内容]\n" + (await fs.readFile(base, "utf8").catch(() => ""));
-  const [aText, bText] = await Promise.all([
-    fs.readFile(base, "utf8").catch(() => ""),
-    fs.readFile(cur, "utf8").catch(() => ""),
-  ]);
-  return G.linesDiff(aText, bText, "baseline/" + file, file);
-}
-
-/** 接受单个文件（git → 暂存；复制基线 → 记录）。 */
-export async function acceptFile(deps, review, file) {
-  const G = gitOps(deps);
-  const dir = path.resolve(review.workspacePath);
-  if (review.status !== "open") throw new Error("评审已关闭");
-  if (!review.files[file]) throw new Error("文件不在评审差异中: " + file);
-  if (review.baseline?.type === "git") {
-    const r = await G.stageFile(dir, file);
-    if (!r.ok) throw new Error("git add 失败: " + r.error);
-  }
-  review.files[file].decision = "accepted";
-  await saveReview(review);
-  return review;
-}
-
-/** 拒绝单个文件（git → checkout；复制基线 → 恢复）。 */
-export async function rejectFile(deps, review, file) {
-  const G = gitOps(deps);
-  const dir = path.resolve(review.workspacePath);
-  if (review.status !== "open") throw new Error("评审已关闭");
-  if (!review.files[file]) throw new Error("文件不在评审差异中: " + file);
-  if (review.baseline?.type === "git") {
-    const r = await G.discardFile(dir, file, review.baseline.commit);
-    if (!r.ok) throw new Error("git 恢复失败: " + r.error);
-  } else {
-    const base = path.join(baselineDir(review.id), file);
-    const cur = path.join(dir, file);
-    if (await fs.stat(base).catch(() => null)) {
-      await fs.mkdir(path.dirname(cur), { recursive: true });
-      await fs.copyFile(base, cur);
-    } else {
-      await fs.rm(cur, { force: true });
-    }
-  }
-  review.files[file].decision = "rejected";
-  await saveReview(review);
-  return review;
-}
-
-/** 提交已接受改动（git → commit；复制基线 → 标记完成）。 */
-export async function commitReview(deps, review, message) {
-  const G = gitOps(deps);
-  const dir = path.resolve(review.workspacePath);
-  if (review.status !== "open") throw new Error("评审已关闭");
-  const msg = String(message ?? "").trim() || "评审通过: " + review.id;
-  if (review.baseline?.type === "git") {
-    const accepted = Object.entries(review.files).filter(([, f]) => f.decision === "accepted").map(([p]) => p);
-    if (accepted.length === 0) throw new Error("没有已接受的文件可提交");
-    const r = await G.commit(dir, msg);
-    if (!r.ok) throw new Error("git commit 失败: " + r.error);
-  }
-  review.status = "committed";
-  review.message = msg;
-  review.committedAt = Date.now();
-  await saveReview(review);
-  return review;
-}
-
-/** 放弃评审：未接受的文件全部恢复。 */
-export async function discardReview(deps, review) {
-  const G = gitOps(deps);
-  const dir = path.resolve(review.workspacePath);
-  if (review.status !== "open") throw new Error("评审已关闭");
-  const pending = Object.entries(review.files).filter(([, f]) => f.decision !== "accepted");
-  for (const [file] of pending) {
-    try {
-      if (review.baseline?.type === "git") {
-        await G.discardFile(dir, file, review.baseline.commit);
-      } else {
-        const base = path.join(baselineDir(review.id), file);
-        const cur = path.join(dir, file);
-        if (await fs.stat(base).catch(() => null)) {
-          await fs.mkdir(path.dirname(cur), { recursive: true });
-          await fs.copyFile(base, cur);
-        } else {
-          await fs.rm(cur, { force: true });
-        }
-      }
-    } catch {
-      /* 尽力恢复 */
-    }
-  }
-  review.status = "discarded";
-  await saveReview(review);
   return review;
 }
 
@@ -303,4 +108,150 @@ async function saveReview(review) {
   if (pos >= 0) data.reviews[pos] = review;
   else data.reviews.push(review);
   await reviewsDoc().save(data);
+}
+
+// ---------------------------------------------------------------- 状态刷新
+
+/**
+ * 刷新评审状态（只处理 running）：按会话 agent 状态 + 最新 assistant 报告推断。
+ * - agent 不再运行（回合结束）→ done（finishedAt）；
+ * - 同步最新报告文本。
+ * 返回是否发生变化（便于调用方决定是否落盘）。
+ */
+export function refreshReviewState(deps, review) {
+  if (!review || review.status !== STATUS.RUNNING) return false;
+  const agent = deps?.agents?.get?.(review.sessionId);
+  const session = deps?.sessions?.get?.(review.sessionId);
+  const running = agent?.status === "running";
+  const report = reportOfSession(session);
+  let changed = false;
+  if (report && report !== review.report) {
+    review.report = report;
+    changed = true;
+  }
+  if (!running) {
+    review.status = STATUS.DONE;
+    review.finishedAt = Date.now();
+    changed = true;
+  }
+  return changed;
+}
+
+// ---------------------------------------------------------------- 动作
+
+/** 评审列表（按创建时间倒序）；running 的评审先刷新状态。 */
+export async function listReviews(deps) {
+  const data = await reviewsDoc().load();
+  let changed = false;
+  for (const review of data.reviews) {
+    if (await normalizeReview(review)) changed = true;
+    if (refreshReviewState(deps, review)) changed = true;
+  }
+  if (changed) await reviewsDoc().save(data);
+  return [...data.reviews].sort((a, b) => b.createdAt - a.createdAt);
+}
+
+/** 取单个评审（含刷新）。 */
+export async function getReview(deps, id) {
+  const review = await findReview(id);
+  let changed = await normalizeReview(review);
+  if (refreshReviewState(deps, review)) changed = true;
+  if (changed) await saveReview(review);
+  return review;
+}
+
+/**
+ * 开始评审：填模板 prompt → 投递会话 AI（queue 模式）→ 记录 running。
+ * 同一会话同时只允许一个进行中的评审。
+ */
+export async function startReview(deps, { sessionId, templateId, values } = {}) {
+  if (!sessionId) throw new Error("缺少 sessionId");
+  const session = deps?.sessions?.get?.(sessionId);
+  if (!session) throw new Error("会话不存在或未加载: " + sessionId);
+  const agent = deps?.agents?.get?.(sessionId);
+  if (!agent) throw new Error("会话没有活动的 agent，无法发起评审（会话需处于打开状态）");
+
+  const data = await reviewsDoc().load();
+  if (data.reviews.some((r) => r.status === STATUS.RUNNING && r.sessionId === sessionId)) {
+    throw new Error("该会话已有进行中的评审，请先终止或结束");
+  }
+
+  // 评审 prompt：来自模板（默认内置「评审：测试+安全」），未填变量用模板默认值
+  const templateIdResolved = templateId || REVIEW_TEMPLATE_ID;
+  const templatesDoc = templates.templatesDoc();
+  await templates.ensureSeeded(templatesDoc);
+  const tpl = await templates.getTemplate(templatesDoc, templateIdResolved);
+  let prompt;
+  if (tpl) {
+    prompt = templates.fillTemplate(tpl, values ?? {});
+  } else {
+    prompt = String(values?.prompt ?? "").trim();
+    if (!prompt) throw new Error("模板不存在: " + templateIdResolved);
+  }
+
+  const review = {
+    id: newId("rev"),
+    sessionId,
+    workspacePath: typeof session.header?.cwd === "string" ? session.header.cwd : null,
+    templateId: tpl?.id ?? null,
+    templateName: tpl?.name ?? null,
+    prompt,
+    createdAt: Date.now(),
+    status: STATUS.RUNNING,
+    startedAt: Date.now(),
+    finishedAt: null,
+    terminatedAt: null,
+    endedAt: null,
+    report: "",
+  };
+
+  try {
+    agent.followup(makeUserMessage(prompt));
+  } catch (e) {
+    throw new Error("投递评审任务失败: " + String(e?.message ?? e));
+  }
+
+  data.reviews.push(review);
+  await reviewsDoc().save(data);
+  return review;
+}
+
+/** 终止：中断 AI 回合（agent.cancel），记录置为 terminated。 */
+export async function terminateReview(deps, id) {
+  const review = await findReview(id);
+  if (review.status !== STATUS.RUNNING) throw new Error("评审已结束，无需终止");
+  const agent = deps?.agents?.get?.(review.sessionId);
+  if (agent) {
+    try {
+      agent.cancel({ kind: "user" }, { keepInbox: true });
+    } catch {
+      /* 尽力中断 */
+    }
+  }
+  review.status = STATUS.TERMINATED;
+  review.terminatedAt = Date.now();
+  review.report = reportOfSession(deps?.sessions?.get?.(review.sessionId)) || review.report || "";
+  await saveReview(review);
+  return review;
+}
+
+/** 结束：任何时候手动收尾（保留报告）；若还在运行则一并中断任务。 */
+export async function endReview(deps, id) {
+  const review = await findReview(id);
+  if (review.status === STATUS.ENDED) throw new Error("评审已结束");
+  if (review.status === STATUS.RUNNING) {
+    const agent = deps?.agents?.get?.(review.sessionId);
+    if (agent) {
+      try {
+        agent.cancel({ kind: "user" }, { keepInbox: true });
+      } catch {
+        /* 尽力中断 */
+      }
+    }
+  }
+  review.status = STATUS.ENDED;
+  review.endedAt = Date.now();
+  review.report = reportOfSession(deps?.sessions?.get?.(review.sessionId)) || review.report || "";
+  await saveReview(review);
+  return review;
 }

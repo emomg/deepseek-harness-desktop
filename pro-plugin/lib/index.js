@@ -1,6 +1,6 @@
 //! @dsh-pro/core · 宿主插件 v2
 //!
-//! 四个能力：任务模板库 / 项目仪表盘 / 会话自动摘要 / 评审门禁。
+//! 四个能力：任务模板库 / 项目仪表盘 / 会话自动摘要 / 评审任务（测试+安全，可终止/结束）。
 //! 复用 DSH 原生服务：workspaceRegistry（工作区→会话）、sessions、sessionPersistence、
 //! sessionProjections（goal/todos/sessionStats）、llm（摘要生成）、webServer（/api/pro/*）。
 //! 数据目录：DSH_PRO_DATA_DIR 或 %LOCALAPPDATA%\DeepSeek Harness Pro\data。
@@ -19,6 +19,7 @@ export const inject = [
   "workspaceRegistry",
   "webServer",
   "sessions",
+  "agents",
   "sessionPersistence",
   "llm",
   "sessionProjections",
@@ -78,6 +79,7 @@ export function apply(ctx) {
   const deps = {
     llm: ctx.llm,
     sessions: ctx.sessions,
+    agents: ctx.agents,
     sessionPersistence: ctx.sessionPersistence,
     sessionProjections: ctx.sessionProjections,
     workspaceRegistry: registry,
@@ -115,18 +117,6 @@ export function apply(ctx) {
     return null;
   }
 
-  // ---- 会话基线：会话创建时捕获该会话开始时的 git 提交（按会话评审用） ----
-  ctx.on("session/created", (session) => {
-    try {
-      const sid = session?.sessionId ?? session?.id;
-      if (!sid) return;
-      const ws = workspaceOfSession(sid);
-      if (!ws) return;
-      review.captureSessionBaseline(deps, sid, ws.path).catch(() => {});
-    } catch {
-      /* ignore */
-    }
-  });
 
   // ---- 自动摘要：每轮任务收尾时触发（有新活动 + 节流通过才生成） ----
   ctx.on("agent/turn-stopping", (payload) => {
@@ -309,7 +299,8 @@ export function apply(ctx) {
       },
     },
 
-    // ---- 评审门禁 ----
+    // ---- 评审：任务式（跑测试 + 安全检查，可随时终止/结束） ----
+    // 开始评审（body: { sessionId, templateId?, values? }）
     {
       kind: "exact",
       path: "/api/pro/review/start",
@@ -317,18 +308,11 @@ export function apply(ctx) {
         if (!methodOf(req, res, "POST")) return;
         try {
           const body = await readJsonBody(req);
-          let workspacePath = body.workspacePath;
-          let sessionId = typeof body.sessionId === "string" ? body.sessionId : null;
-          // 按会话评审：只传 sessionId 时自动解析其工作区
-          if ((typeof workspacePath !== "string" || !workspacePath) && sessionId) {
-            const ws = workspaceOfSession(sessionId);
-            if (!ws) throw new Error("会话不属于任何工作区，无法定位评审目录");
-            workspacePath = ws.path;
-          }
-          if (typeof workspacePath !== "string" || !workspacePath) {
-            throw new Error("缺少 workspacePath 或 sessionId");
-          }
-          const rev = await review.startReview(deps, { workspacePath, sessionId });
+          const rev = await review.startReview(deps, {
+            sessionId: typeof body.sessionId === "string" ? body.sessionId : null,
+            templateId: typeof body.templateId === "string" && body.templateId ? body.templateId : undefined,
+            values: body.values && typeof body.values === "object" ? body.values : undefined,
+          });
           writeJson(res, 200, { ok: true, review: rev });
         } catch (e) {
           writeJson(res, 400, { error: String(e?.message ?? e) });
@@ -336,6 +320,7 @@ export function apply(ctx) {
       },
     },
 
+    // 评审列表（GET；running 的评审先刷新状态）
     {
       kind: "exact",
       path: "/api/pro/review/list",
@@ -343,7 +328,6 @@ export function apply(ctx) {
         if (!methodOf(req, res, "GET")) return;
         try {
           const revs = await review.listReviews(deps);
-          // 补充会话标题（单列表/按工作区展示"会话内容"用）
           for (const rev of revs) {
             rev.sessionTitle = rev.sessionId ? sessionTitleOf(rev.sessionId) : null;
           }
@@ -354,7 +338,7 @@ export function apply(ctx) {
       },
     },
 
-    // 评审详情（GET ?id=）——含刷新后的文件差异清单
+    // 评审详情（GET ?id=）
     {
       kind: "exact",
       path: "/api/pro/review",
@@ -363,100 +347,186 @@ export function apply(ctx) {
         try {
           const id = queryOf(req).get("id") ?? "";
           const rev = await review.getReview(deps, id);
-          const files = Object.entries(rev.files ?? {}).map(([path, f]) => ({
-            path,
-            status: f.status,
-            decision: f.decision,
-          }));
-          writeJson(res, 200, { ok: true, review: { ...rev, files } });
+          rev.sessionTitle = rev.sessionId ? sessionTitleOf(rev.sessionId) : null;
+          writeJson(res, 200, { ok: true, review: rev });
         } catch (e) {
           writeJson(res, 400, { error: String(e?.message ?? e) });
         }
       },
     },
 
-    // 单文件差异（GET ?id=&file=）
+    // 终止（body: { id }）——中断 AI 回合
     {
       kind: "exact",
-      path: "/api/pro/review/diff",
+      path: "/api/pro/review/terminate",
+      handler: async (req, res) => {
+        if (!methodOf(req, res, "POST")) return;
+        try {
+          const body = await readJsonBody(req);
+          const rev = await review.terminateReview(deps, body.id);
+          writeJson(res, 200, { ok: true, review: rev });
+        } catch (e) {
+          writeJson(res, 400, { error: String(e?.message ?? e) });
+        }
+      },
+    },
+
+    // 结束（body: { id }）——任何时候手动收尾
+    {
+      kind: "exact",
+      path: "/api/pro/review/end",
+      handler: async (req, res) => {
+        if (!methodOf(req, res, "POST")) return;
+        try {
+          const body = await readJsonBody(req);
+          const rev = await review.endReview(deps, body.id);
+          writeJson(res, 200, { ok: true, review: rev });
+        } catch (e) {
+          writeJson(res, 400, { error: String(e?.message ?? e) });
+        }
+      },
+    },
+
+    // ---- 设置页：技能（Skill）管理 ----
+    {
+      kind: "exact",
+      path: "/api/pro/skills",
       handler: async (req, res) => {
         if (!methodOf(req, res, "GET")) return;
         try {
-          const id = queryOf(req).get("id") ?? "";
-          const file = queryOf(req).get("file") ?? "";
-          const rev = await review.getReview(deps, id);
-          const text = await review.reviewFileDiff(deps, rev, file);
-          writeJson(res, 200, { ok: true, diff: text });
+          const skills = ctx.get("skills");
+          let rows = [];
+          if (skills && typeof skills.list === "function") {
+            const out = await skills.list({});
+            rows = (out?.skills ?? []).map((s) => ({
+              name: s.name,
+              description: s.description,
+              provider: s.provider,
+              source: s.source,
+              whenToUse: s.whenToUse,
+              modelInvocable: !!s.invocation?.modelInvocable,
+              userInvocable: !!s.invocation?.userInvocable,
+            }));
+          }
+          // 预设技能库：agent-presets 目录下的 skills/*/SKILL.md（管理视角）
+          const presets = [];
+          const presetsService = ctx.get("agentPresets");
+          let roster = [];
+          try {
+            roster = typeof presetsService?.list === "function" ? await presetsService.list() : [];
+          } catch {
+            roster = [];
+          }
+          for (const preset of roster) {
+            const presetFile = preset?.path ?? preset?.dir;
+            if (typeof presetFile !== "string") continue;
+            // roster 的 path 指向 preset 目录内的 agent.cordis.yml，目录取 dirname
+            const presetDir = path.dirname(presetFile);
+            const presetSkills = [];
+            const skillsDir = path.join(presetDir, "skills");
+            let entries = [];
+            try {
+              entries = await fs.readdir(skillsDir, { withFileTypes: true });
+            } catch {
+              entries = [];
+            }
+            for (const e of entries) {
+              if (!e.isDirectory()) continue;
+              const skillDir = path.join(skillsDir, e.name);
+              let description = "";
+              try {
+                const head = (await fs.readFile(path.join(skillDir, "SKILL.md"), "utf8")).slice(0, 400);
+                description =
+                  head.split(/\r?\n/).find((line) => line.trim() && !line.trim().startsWith("#"))?.trim() ?? "";
+              } catch {
+                continue;
+              }
+              presetSkills.push({ name: e.name, description });
+            }
+            presets.push({
+              id: preset?.id ?? preset?.name ?? path.basename(presetDir),
+              name: preset?.name ?? path.basename(presetDir),
+              path: presetDir,
+              skills: presetSkills,
+            });
+          }
+          // 用户技能根：$DSH_HOME/skills（所有带 skill-filesystem 预设的 agent 都会读到）
+          const userSkills = [];
+          const dshHome = process.env.DSH_HOME || path.join(process.env.USERPROFILE || "", ".dsh");
+          const userSkillsDir = path.join(dshHome, "skills");
+          let userSkillEntries = [];
+          try {
+            userSkillEntries = await fs.readdir(userSkillsDir, { withFileTypes: true });
+          } catch {
+            userSkillEntries = [];
+          }
+          for (const e of userSkillEntries) {
+            if (!e.isDirectory()) continue;
+            const skillDir = path.join(userSkillsDir, e.name);
+            let description = "";
+            try {
+              const head = (await fs.readFile(path.join(skillDir, "SKILL.md"), "utf8")).slice(0, 400);
+              description =
+                head.split(/\r?\n/).find((line) => line.trim() && !line.trim().startsWith("#"))?.trim() ?? "";
+            } catch {
+              continue;
+            }
+            userSkills.push({ name: e.name, description, path: skillDir });
+          }
+          writeJson(res, 200, { ok: true, skills: rows, presets, userSkills });
         } catch (e) {
-          writeJson(res, 400, { error: String(e?.message ?? e) });
+          writeJson(res, 500, { error: String(e?.message ?? e) });
         }
       },
     },
 
-    // 接受文件（body: { id, file }）
+    // ---- 设置页：MCP 服务器管理 ----
     {
       kind: "exact",
-      path: "/api/pro/review/accept",
+      path: "/api/pro/mcp",
       handler: async (req, res) => {
-        if (!methodOf(req, res, "POST")) return;
+        if (!methodOf(req, res, "GET")) return;
         try {
-          const body = await readJsonBody(req);
-          const rev = await review.getReview(deps, body.id);
-          await review.acceptFile(deps, rev, body.file);
-          writeJson(res, 200, { ok: true, review: rev });
+          const loader = ctx.get("loader");
+          const tools = ctx.get("tools");
+          const fiberLabel = (state) =>
+            ({ 0: "pending", 1: "loading", 2: "active", 3: "failed", 4: "unloading", 5: "disposed" }[state] ?? "unknown");
+          let toolNames = [];
+          try {
+            if (tools && typeof tools.schemas === "function") {
+              for (const s of tools.schemas() ?? []) toolNames.push(s?.name ?? "");
+            }
+          } catch {
+            /* tools 不可用时仅展示配置 */
+          }
+          const servers = [];
+          const seen = new Set();
+          for (const entry of loader?.entries?.() ?? []) {
+            const name = entry?.options?.name;
+            if (name !== "mcp-client") continue;
+            const cfg = entry?.options?.config ?? {};
+            const serverName = cfg.serverName ?? "unknown";
+            if (seen.has(serverName)) continue;
+            seen.add(serverName);
+            servers.push({
+              serverName,
+              transport: cfg.transport ?? "unknown",
+              command: cfg.command ?? null,
+              args: Array.isArray(cfg.args) ? cfg.args : [],
+              url: cfg.url ?? null,
+              cwd: cfg.cwd ?? null,
+              envKeys: cfg.env && typeof cfg.env === "object" ? Object.keys(cfg.env) : [],
+              headerKeys: cfg.headers && typeof cfg.headers === "object" ? Object.keys(cfg.headers) : [],
+              failOnStartupError: !!cfg.failOnStartupError,
+              reconnectEnabled: !!cfg.reconnect?.enabled,
+              state: fiberLabel(entry?.fiber?.state),
+              disabled: !!entry?.disabled,
+              toolCount: toolNames.filter((n) => n.startsWith("mcp__" + serverName + "__")).length,
+            });
+          }
+          writeJson(res, 200, { ok: true, servers });
         } catch (e) {
-          writeJson(res, 400, { error: String(e?.message ?? e) });
-        }
-      },
-    },
-
-    // 拒绝文件（body: { id, file }）
-    {
-      kind: "exact",
-      path: "/api/pro/review/reject",
-      handler: async (req, res) => {
-        if (!methodOf(req, res, "POST")) return;
-        try {
-          const body = await readJsonBody(req);
-          const rev = await review.getReview(deps, body.id);
-          await review.rejectFile(deps, rev, body.file);
-          writeJson(res, 200, { ok: true, review: rev });
-        } catch (e) {
-          writeJson(res, 400, { error: String(e?.message ?? e) });
-        }
-      },
-    },
-
-    // 提交（body: { id, message? }）
-    {
-      kind: "exact",
-      path: "/api/pro/review/commit",
-      handler: async (req, res) => {
-        if (!methodOf(req, res, "POST")) return;
-        try {
-          const body = await readJsonBody(req);
-          const rev = await review.getReview(deps, body.id);
-          await review.commitReview(deps, rev, body.message);
-          writeJson(res, 200, { ok: true, review: rev });
-        } catch (e) {
-          writeJson(res, 400, { error: String(e?.message ?? e) });
-        }
-      },
-    },
-
-    // 放弃（body: { id }）
-    {
-      kind: "exact",
-      path: "/api/pro/review/discard",
-      handler: async (req, res) => {
-        if (!methodOf(req, res, "POST")) return;
-        try {
-          const body = await readJsonBody(req);
-          const rev = await review.getReview(deps, body.id);
-          await review.discardReview(deps, rev);
-          writeJson(res, 200, { ok: true, review: rev });
-        } catch (e) {
-          writeJson(res, 400, { error: String(e?.message ?? e) });
+          writeJson(res, 500, { error: String(e?.message ?? e) });
         }
       },
     },

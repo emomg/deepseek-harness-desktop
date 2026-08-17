@@ -215,33 +215,31 @@ window.__ModuleLoader__.load({
       "tpl.copied": "已复制到剪贴板，粘贴到输入框即可使用",
       "tpl.failed": "操作失败",
       "review.start": "开始评审",
-      "review.workspace": "选择工作区",
-      "review.empty": "还没有评审。选择一个工作区开始评审：捕获基线 → 逐文件审阅差异 → 接受/拒绝 → 提交。",
+      "review.empty": "还没有评审。选择一个会话开始评审：AI 会跑一遍测试并做安全检查，过程可随时终止或结束。",
       "review.open": "打开",
       "review.pickSession": "选择要评审的会话…",
-      "review.wholeWorkspace": "整个工作区（不绑定会话）",
-      "review.accept": "接受",
-      "review.reject": "拒绝",
-      "review.diff": "差异",
-      "review.commit": "提交已接受",
-      "review.discard": "放弃评审",
-      "review.status.open": "进行中",
-      "review.status.committed": "已提交",
-      "review.status.discarded": "已放弃",
-      "review.file.deleted": "已删",
-      "review.file.added": "新增",
-      "review.file.modified": "修改",
-      "review.noFiles": "没有检测到改动。",
-      "review.commitMsg": "提交说明",
-      "review.confirmDiscard": "放弃评审将恢复所有未接受的文件，确定？",
+      "review.terminate": "终止",
+      "review.end": "结束",
+      "review.status.running": "进行中",
+      "review.status.done": "已完成",
+      "review.status.terminated": "已终止",
+      "review.status.ended": "已结束",
+      "review.noReport": "还没有报告",
+      "review.promptLabel": "评审任务",
+      "review.reportLabel": "AI 报告",
+      "review.template": "模板",
+      "review.confirmTerminate": "终止将中断正在执行的 AI 任务，确定？",
+      "review.confirmEnd": "结束将关闭该评审记录（若还在运行会一并中断），确定？",
       "review.starting": "开始中…",
-      "review.diffFailed": "无法加载差异",
       "common.err": "出错",
       "settings.personalize": "个性化",
       "settings.skill": "技能",
       "settings.mcp": "MCP",
       "personalize.title": "个性化 · 黑鲸鱼主题",
-      "personalize.enabled": "启用黑鲸鱼背景",
+      "personalize.bgStyle": "背景样式",
+      "personalize.bgWhale": "黑鲸鱼（默认）",
+      "personalize.bgGradient": "液态渐变（无鲸鱼）",
+      "personalize.enabled": "启用自定义背景",
       "personalize.enabledHint": "主面板默认使用液态磨砂玻璃，背后透出 DeepSeek 黑鲸鱼（玻璃拟态，参考 Codex 风格）。所有选项即时生效并保存在本机。",
       "personalize.opacity": "鲸鱼可见度",
       "personalize.blur": "磨砂模糊半径",
@@ -252,6 +250,7 @@ window.__ModuleLoader__.load({
       "skill.title": "技能管理",
       "skill.empty": "暂无可用技能。",
       "skill.presets": "预设技能库",
+      "skill.userLib": "用户技能",
       "skill.none": "无",
       "skill.refresh": "刷新",
       "skill.model": "模型可调用",
@@ -299,21 +298,30 @@ window.__ModuleLoader__.load({
       "tpl.cancel": "Cancel",
       "tpl.copied": "Copied to clipboard.",
       "review.start": "Start review",
+      "review.empty": "No reviews yet. Pick a session to start: the AI runs tests and a security check; you can terminate or end it anytime.",
+      "review.open": "Open",
       "review.pickSession": "Pick a session to review…",
-      "review.wholeWorkspace": "Whole workspace (no session)",
-      "review.accept": "Accept",
-      "review.reject": "Reject",
-      "review.diff": "Diff",
-      "review.commit": "Commit accepted",
-      "review.discard": "Discard",
-      "review.status.open": "open",
-      "review.status.committed": "committed",
-      "review.status.discarded": "discarded",
+      "review.terminate": "Terminate",
+      "review.end": "End",
+      "review.status.running": "running",
+      "review.status.done": "done",
+      "review.status.terminated": "terminated",
+      "review.status.ended": "ended",
+      "review.noReport": "No report yet",
+      "review.promptLabel": "Review task",
+      "review.reportLabel": "AI report",
+      "review.template": "Template",
+      "review.confirmTerminate": "Terminate will interrupt the running AI task. Continue?",
+      "review.confirmEnd": "End closes this review (interrupting the task if still running). Continue?",
+      "review.starting": "Starting…",
       "settings.personalize": "Personalize",
       "settings.skill": "Skills",
       "settings.mcp": "MCP",
       "personalize.title": "Personalize · Whale theme",
-      "personalize.enabled": "Enable whale background",
+      "personalize.bgStyle": "Background style",
+      "personalize.bgWhale": "Black whale (default)",
+      "personalize.bgGradient": "Liquid gradient (no whale)",
+      "personalize.enabled": "Enable custom background",
       "personalize.enabledHint": "The main panel defaults to liquid frosted glass with the DeepSeek black whale behind it (glassmorphism, Codex-inspired). Changes apply instantly and are saved locally.",
       "personalize.opacity": "Whale visibility",
       "personalize.blur": "Frost blur radius",
@@ -324,6 +332,7 @@ window.__ModuleLoader__.load({
       "skill.title": "Skills",
       "skill.empty": "No skills available.",
       "skill.presets": "Preset skill library",
+      "skill.userLib": "User skills",
       "skill.none": "none",
       "skill.refresh": "Refresh",
       "skill.model": "model",
@@ -551,15 +560,13 @@ window.__ModuleLoader__.load({
       ]);
     }
 
-    // ------------------------------------------------------------ 评审
+    // ------------------------------------------------------------ 评审（任务式：测试+安全，可终止/结束）
     function ReviewTab({ t }) {
       const [dash, setDash] = useState(null);
       const [reviews, setReviews] = useState(null);
       const [target, setTarget] = useState("");
       const [openId, setOpenId] = useState(null);
       const [detail, setDetail] = useState(null);
-      const [diffText, setDiffText] = useState(null);
-      const [diffFile, setDiffFile] = useState(null);
       const [busy, setBusy] = useState(false);
       const [err, setErr] = useState(null);
 
@@ -576,15 +583,29 @@ window.__ModuleLoader__.load({
         loadReviews();
       }, [loadReviews]);
 
+      // 有进行中的评审时轮询刷新（状态 + 报告）
+      const hasRunning = (reviews ?? []).some((r) => r.status === "running") || detail?.status === "running";
+      useEffect(() => {
+        if (!hasRunning) return;
+        const timer = setInterval(async () => {
+          await loadReviews();
+          if (openId) {
+            try {
+              const d = await api("/api/pro/review?id=" + encodeURIComponent(openId));
+              setDetail(d.review);
+            } catch { /* ignore */ }
+          }
+        }, 5000);
+        return () => clearInterval(timer);
+      }, [hasRunning, openId, loadReviews]);
+
       const start = async () => {
         if (!target) { window.alert(t("review.pickSession")); return; }
         setBusy(true);
         try {
-          const body = target.startsWith("session:")
-            ? { sessionId: target.slice(8) }
-            : { workspacePath: target.slice(3) };
-          const d = await api("/api/pro/review/start", { method: "POST", body });
+          const d = await api("/api/pro/review/start", { method: "POST", body: { sessionId: target } });
           setOpenId(d.review.id);
+          setDetail(d.review);
           await loadReviews();
         } catch (e) {
           window.alert(t("common.err") + ": " + (e?.message ?? e));
@@ -594,125 +615,96 @@ window.__ModuleLoader__.load({
       };
 
       const openReview = async (id) => {
+        setBusy(true);
         try {
           const d = await api("/api/pro/review?id=" + encodeURIComponent(id));
           setOpenId(id);
           setDetail(d.review);
-          setDiffText(null);
-          setDiffFile(null);
         } catch (e) {
           window.alert(t("common.err") + ": " + (e?.message ?? e));
+        } finally {
+          setBusy(false);
         }
       };
 
-      const showDiff = async (file) => {
-        setDiffFile(file);
-        setDiffText("…");
+      const act = async (action, confirmMsg) => {
+        if (confirmMsg && !window.confirm(confirmMsg)) return;
+        setBusy(true);
         try {
-          const d = await api("/api/pro/review/diff?id=" + encodeURIComponent(openId) + "&file=" + encodeURIComponent(file));
-          setDiffText(d.diff);
-        } catch (e) {
-          setDiffText(t("review.diffFailed") + ": " + (e?.message ?? e));
-        }
-      };
-
-      const act = async (action, file) => {
-        try {
-          await api("/api/pro/review/" + action, { method: "POST", body: { id: openId, file } });
-          await openReview(openId);
-        } catch (e) {
-          window.alert(t("common.err") + ": " + (e?.message ?? e));
-        }
-      };
-
-      const commit = async () => {
-        const msg = window.prompt(t("review.commitMsg"), "");
-        if (msg === null) return;
-        try {
-          await api("/api/pro/review/commit", { method: "POST", body: { id: openId, message: msg } });
+          await api("/api/pro/review/" + action, { method: "POST", body: { id: openId } });
           await loadReviews();
           await openReview(openId);
         } catch (e) {
           window.alert(t("common.err") + ": " + (e?.message ?? e));
-        }
-      };
-
-      const discard = async () => {
-        if (!window.confirm(t("review.confirmDiscard"))) return;
-        try {
-          await api("/api/pro/review/discard", { method: "POST", body: { id: openId } });
-          await loadReviews();
-          setOpenId(null);
-          setDetail(null);
-        } catch (e) {
-          window.alert(t("common.err") + ": " + (e?.message ?? e));
+        } finally {
+          setBusy(false);
         }
       };
 
       const workspaces = dash ?? [];
 
+      const statusBadge = (status) => {
+        const kind = status === "running" ? "active"
+          : status === "done" ? "complete"
+          : status === "terminated" ? "blocked"
+          : "none";
+        return Badge({ kind, children: t("review.status." + status) });
+      };
+
       const reviewRow = (r) => {
-        const files = Object.entries(r.files ?? {});
-        const accepted = files.filter(([, f]) => f.decision === "accepted").length;
-        const rejected = files.filter(([, f]) => f.decision === "rejected").length;
-        const pending = files.length - accepted - rejected;
         const title = r.sessionTitle || (r.sessionId ? r.sessionId.slice(0, 12) : null);
+        const reportFirst = (r.report || "").split(/\r?\n/)[0] || "";
         return h("div", { className: "dsp2-row", key: r.id },
           h("div", { style: { flex: 1, minWidth: 0 } },
-            h("div", { className: "dsp2-rowName" }, title ? "💬 " + title : "📁 " + r.workspacePath),
+            h("div", { className: "dsp2-rowName" },
+              statusBadge(r.status),
+              "  " + (title ? "💬 " + title : "📁 " + r.workspacePath)),
             h("div", { className: "dsp2-rowDesc" },
-              (title ? r.workspacePath + " · " : "") +
-              fmtTime(r.createdAt) + " · " + t("review.status." + r.status) + " · " + files.length + " files" +
-              (accepted ? " · ✓" + accepted : "") + (rejected ? " · ✗" + rejected : "") + (pending ? " · ·" + pending : "")),
-            files.slice(0, 4).map(([p, f]) =>
-              h("div", { className: "dsp2-rowDesc", key: p, style: { fontFamily: "Cascadia Code,Consolas,monospace", fontSize: 11 } },
-                (f.status === "M" ? "M" : f.status === "A" ? "A" : "D") + " " + p +
-                (f.decision === "accepted" ? "  ✓" : f.decision === "rejected" ? "  ✗" : ""))),
-            files.length > 4 ? h("div", { className: "dsp2-rowDesc" }, "+" + (files.length - 4) + " files…") : null),
-          IconBtn({ onClick: () => openReview(r.id) }, t("review.open")));
+              (r.workspacePath ? r.workspacePath + " · " : "") +
+              fmtTime(r.createdAt) + " · " + (r.templateName || r.templateId || "评审")),
+            reportFirst
+              ? h("div", { className: "dsp2-rowDesc", style: { whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, reportFirst)
+              : null),
+          h("button", { className: "dsp2-btn sm", onClick: () => openReview(r.id) }, t("review.open")),
+          r.status === "running" && h("button", { className: "dsp2-btn sm danger", onClick: () => act("terminate", t("review.confirmTerminate")) }, t("review.terminate")),
+          r.status !== "ended" && h("button", { className: "dsp2-btn sm", onClick: () => act("end", t("review.confirmEnd")) }, t("review.end")));
       };
 
       if (detail) {
-        const files = detail.files ?? [];
-        const stLabel = { M: t("review.file.modified"), A: t("review.file.added"), D: t("review.file.deleted") };
+        const running = detail.status === "running";
         return h("div", null, [
           h("div", { className: "dsp2-hint" },
-            detail.workspacePath + " · " + t("review.status." + detail.status) +
-            " · " + (detail.baseline?.type === "git" ? "git@" + (detail.baseline?.head ?? "?") : "复制基线") +
-            " · 接受 " + files.filter((f) => f.decision === "accepted").length +
-            " / 拒绝 " + files.filter((f) => f.decision === "rejected").length),
-          files.length === 0
-            ? h("div", { className: "dsp2-empty" }, t("review.noFiles"))
-            : files.map((f) =>
-                h("div", { className: "dsp2-file" + (diffFile === f.path ? " on" : ""), key: f.path, onClick: () => showDiff(f.path) },
-                  h("span", { className: "dsp2-st" + f.status }, stLabel[f.status] ?? f.status),
-                  h("span", { className: "dsp2-filePath" }, f.path),
-                  h("span", { className: "dsp2-dec " + f.decision }, f.decision === "pending" ? "·" : (f.decision === "accepted" ? "✓" : "✗")),
-                  h("button", { className: "dsp2-btn sm", onClick: (e) => { e.stopPropagation(); act("accept", f.path); } }, t("review.accept")),
-                  h("button", { className: "dsp2-btn sm danger", onClick: (e) => { e.stopPropagation(); act("reject", f.path); } }, t("review.reject")))),
-          h("div", { className: "dsp2-diff" }, diffText ?? "…"),
+            (detail.sessionTitle ? "💬 " + detail.sessionTitle + " · " : "") +
+            detail.workspacePath + " · " + statusBadge(detail.status) +
+            (detail.templateName ? " · " + t("review.template") + ": " + detail.templateName : "")),
+          h("div", { className: "dsp2-sessMeta", style: { margin: "4px 0" } }, t("review.promptLabel")),
+          h("pre", { className: "dsp2-diff", style: { minHeight: 60, whiteSpace: "pre-wrap" } }, detail.prompt || ""),
+          h("div", { className: "dsp2-sessMeta", style: { margin: "8px 0 4px" } }, t("review.reportLabel")),
+          h("div", { className: "dsp2-summary", style: { whiteSpace: "pre-wrap" } },
+            detail.report ? detail.report : (running ? "…" : t("review.noReport"))),
           h("div", { style: { display: "flex", gap: 6, marginTop: 8 } },
-            detail.status === "open" && h("button", { className: "dsp2-btn primary", onClick: commit }, t("review.commit")),
-            detail.status === "open" && h("button", { className: "dsp2-btn danger", onClick: discard }, t("review.discard")),
+            running && h("button", { className: "dsp2-btn danger", onClick: () => act("terminate", t("review.confirmTerminate")) }, t("review.terminate")),
+            detail.status !== "ended" && h("button", { className: "dsp2-btn primary", onClick: () => act("end", t("review.confirmEnd")) }, t("review.end")),
             h("button", { className: "dsp2-btn", onClick: () => { setOpenId(null); setDetail(null); } }, "←")),
         ]);
       }
+
+      if (err) return h("div", { className: "dsp2-empty" }, err);
 
       return h("div", null, [
         h("div", { className: "dsp2-hint" }, t("review.empty")),
         h("div", { style: { display: "flex", gap: 6, alignItems: "center", marginBottom: 8 } },
           h("select", { className: "dsp2-select", value: target, onChange: (e) => setTarget(e.target.value), style: { flex: 1, minWidth: 0 } },
             h("option", { value: "" }, t("review.pickSession")),
-            workspaces.map((w) => [
-              ...(w.sessions ?? []).map((s) =>
-                h("option", { value: "session:" + s.id, key: s.id },
-                  "💬 " + (s.title || s.id.slice(0, 12)) + " — " + w.title)),
-              h("option", { value: "ws:" + w.path, key: w.workspaceId + "-ws" }, "📁 " + t("review.wholeWorkspace") + ": " + w.title),
-            ])),
+            workspaces.map((w) => (w.sessions ?? []).map((s) =>
+              h("option", { value: s.id, key: s.id },
+                "💬 " + (s.title || s.id.slice(0, 12)) + " — " + w.title)))),
           h("button", { className: "dsp2-btn primary", disabled: busy, onClick: start }, busy ? t("review.starting") : t("review.start"))),
         !reviews
           ? h("div", { className: "dsp2-empty" }, "…")
-          : reviews.map(reviewRow),
+          : reviews.length === 0
+            ? h("div", { className: "dsp2-empty" }, t("review.empty"))
+            : reviews.map(reviewRow),
       ]);
     }
 
@@ -750,17 +742,21 @@ window.__ModuleLoader__.load({
 
     // ------------------------------------------------------------ 设置页：个性化 / 技能 / MCP
     const PREF_KEY = "dsh-personalize-v1";
-    const PREF_DEFAULTS = { enabled: true, opacity: null, blur: null, glass: null, liquid: true };
+    const PREF_DEFAULTS = { enabled: true, bg: "whale", opacity: null, blur: null, glass: null, liquid: true };
 
     function applyPrefsToDom(p) {
       const html = document.documentElement;
-      html.style.setProperty("--dsh-whale-enabled", p.enabled === false ? "0" : "1");
+      const on = p.enabled !== false;
+      const bg = p.bg === "gradient" ? "gradient" : "whale";
+      html.classList.toggle("dsh-whale", on);
+      html.style.setProperty("--dsh-whale-enabled", on ? "1" : "0");
       if (p.opacity != null) html.style.setProperty("--dsh-whale-opacity", String(p.opacity));
       if (p.blur != null) html.style.setProperty("--dsh-whale-blur", p.blur + "px");
       if (p.glass != null) html.style.setProperty("--dsh-whale-glass", String(p.glass));
       html.style.setProperty("--dsh-whale-liquid", p.liquid === false ? "0" : "1");
       html.setAttribute("data-whale-liquid", p.liquid === false ? "0" : "1");
-      html.classList.toggle("dsh-whale", p.enabled !== false);
+      if (bg === "gradient") html.style.setProperty("--dsh-whale-img", "none");
+      else html.style.removeProperty("--dsh-whale-img");
     }
     function loadPrefs() {
       try {
@@ -822,6 +818,17 @@ window.__ModuleLoader__.load({
         h("div", { className: "dsp2-setCard" }, [
           h("div", { className: "dsp2-setTitle" }, t("personalize.title")),
           h("div", { className: "dsp2-rowHint", style: { marginBottom: 8 } }, t("personalize.enabledHint")),
+          Row({
+            label: t("personalize.bgStyle"),
+            control: h("select", {
+              className: "dsp2-select",
+              value: prefs.bg === "gradient" ? "gradient" : "whale",
+              onChange: (e) => update({ bg: e.target.value }),
+            }, [
+              h("option", { value: "whale" }, t("personalize.bgWhale")),
+              h("option", { value: "gradient" }, t("personalize.bgGradient")),
+            ]),
+          }),
           Row({
             label: t("personalize.enabled"),
             control: h("input", {
@@ -893,6 +900,7 @@ window.__ModuleLoader__.load({
       ]);
       const rows = state.skills ?? [];
       const presets = state.presets ?? [];
+      const userSkills = state.userSkills ?? [];
       return h("div", { className: "dsp2-setSection" }, [
         h("div", { style: { textAlign: "right" } },
           h("button", { className: "dsp2-btn sm", onClick: () => setGen((g) => g + 1) }, t("skill.refresh"))),
@@ -921,6 +929,17 @@ window.__ModuleLoader__.load({
                   (p.skills ?? []).length
                     ? p.skills.map((s) => h("span", { className: "dsp2-tag", key: s.name, title: s.description || undefined }, s.name))
                     : h("span", { className: "dsp2-tag" }, t("skill.none"))),
+              ]),
+            ])),
+        ]),
+        userSkills.length > 0 && h("div", { className: "dsp2-setCard", style: { marginTop: 8 } }, [
+          h("div", { className: "dsp2-setTitle" }, t("skill.userLib")),
+          userSkills.map((s) =>
+            h("div", { className: "dsp2-row", key: s.name }, [
+              h("div", { style: { flex: 1, minWidth: 0 } }, [
+                h("div", { className: "dsp2-skillName" }, s.name),
+                h("div", { className: "dsp2-rowHint", style: { marginTop: 2 } }, s.description || ""),
+                h("div", { className: "dsp2-mono", style: { marginTop: 3 } }, s.path),
               ]),
             ])),
         ]),

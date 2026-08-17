@@ -2,7 +2,12 @@
 //! 模板 = { id, name, description, prompt, variables:[{key,label,default,required}], tags }。
 //! prompt 内用 {{key}} 引用变量；首次运行时播种内置模板。
 
-import { jsonDoc, newId } from "./store.js";
+import { jsonDoc, newId, dataDir } from "./store.js";
+
+/** 模板库文档句柄（与 index.js 同文件，供其它模块按需读取）。 */
+export function templatesDoc() {
+  return jsonDoc(dataDir(), "templates.json", { templates: [] });
+}
 
 const DEFAULT_TEMPLATES = [
   {
@@ -34,6 +39,17 @@ const DEFAULT_TEMPLATES = [
       { key: "target", label: "评审范围（文件/提交/改动）", default: "工作区所有未提交改动", required: false },
     ],
     prompt: "请评审以下范围：{{target}}\n\n评审维度：正确性、边界与错误处理、可读性、性能、安全。对每个问题给出严重级别（P0-P2）与具体修改建议。最后给出总体结论（通过/需修改）。",
+  },
+  {
+    id: "tpl-review-task",
+    name: "评审：测试+安全",
+    description: "跑一遍测试 + 安全检查，输出通过/需修改结论",
+    tags: ["评审", "测试", "安全"],
+    variables: [
+      { key: "testCmd", label: "测试命令", default: "npm test", required: false },
+      { key: "securityCmd", label: "安全命令", default: "npm audit", required: false },
+    ],
+    prompt: "请对当前工作区做一次评审（跑测试 + 安全检查）：\n1. 测试：优先运行 {{testCmd}}；若无此命令，先探索项目实际测试方式（package.json scripts、测试目录、语言对应的测试框架）再运行，记录通过/失败、失败项与原因。\n2. 安全：优先运行 {{securityCmd}} 检查依赖漏洞；再人工检查：密钥/凭据泄露（搜索 API_KEY、password=、token、-----BEGIN PRIVATE KEY----- 等常见模式）、危险代码模式（eval、shell 命令拼接、硬编码口令、不安全的反序列化）。\n3. 汇总：给出总体结论（通过/需修改）、问题清单（按严重级别 P0-P2）、每个问题的定位（文件与行号）与修复建议。\n\n报告要具体：命令输出摘要 + 发现的问题。",
   },
   {
     id: "tpl-run-summary",
