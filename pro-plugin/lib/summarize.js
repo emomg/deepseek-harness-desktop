@@ -54,16 +54,37 @@ export function summariesDoc() {
   return jsonDoc(dataDir(), "summaries.json", { bySession: {} });
 }
 
-/** 从会话事件取最后一条 request/header 的路由。 */
+/**
+ * 从会话解析模型路由（provider/model）。
+ * 优先级：1) live Session 的官方缓存折叠 requestContext()/requestHeader()；
+ *         2) 回退扫描事件日志（真实形状）：
+ *            - request/context:  data = { provider, model, contextWindow }
+ *            - request/header:   data = { header: { config: { provider, model, ... } }, reason }
+ */
 export function routeOfSession(session) {
+  // 1) 官方折叠（live 会话，避免手扫事件）
+  try {
+    const rc = session.requestContext?.();
+    if (rc?.provider && rc?.model) return { provider: rc.provider, model: rc.model };
+    const hdr = session.requestHeader?.();
+    const cfg = hdr?.config;
+    if (cfg?.provider && cfg?.model) return { provider: cfg.provider, model: cfg.model };
+  } catch {
+    /* 回退扫描 */
+  }
+  // 2) 事件日志回退（真实形状，从后往前取最新）
   const events = session?.events;
-  if (!Array.isArray(events)) return null;
-  for (let i = events.length - 1; i >= 0; i--) {
-    const ev = events[i];
-    if (ev?.type === "request/header" && ev?.data) {
-      const d = ev.data;
-      if (d?.provider && d?.model) return { provider: d.provider, model: d.model };
-      if (d?.route) return { provider: d.route.provider, model: d.route.model };
+  if (Array.isArray(events)) {
+    for (let i = events.length - 1; i >= 0; i--) {
+      const ev = events[i];
+      const d = ev?.data;
+      if (!d) continue;
+      if (ev.type === "request/context") {
+        if (d.provider && d.model) return { provider: d.provider, model: d.model };
+      } else if (ev.type === "request/header") {
+        const c = d.header?.config ?? d.config;
+        if (c?.provider && c?.model) return { provider: c.provider, model: c.model };
+      }
     }
   }
   return null;

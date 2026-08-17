@@ -6,10 +6,11 @@ import { tempDataDir, fakeSession, fakeLlmKit } from "./helpers.js";
 export async function run() {
   const t = await tempDataDir();
   try {
-    // 路由解析
+    // 路由解析（真实会话事件形状：request/header = {header:{config}}, request/context = 扁平）
     const session = fakeSession({
       events: [
-        { type: "request/header", data: { provider: "deepseek", model: "deepseek-chat" } },
+        { type: "request/header", data: { header: { config: { provider: "deepseek-official", model: "deepseek-v4-flash", temperature: 0.7 }, system: "...", tools: [] }, reason: "initial" } },
+        { type: "request/context", data: { provider: "deepseek-official", model: "deepseek-v4-flash", contextWindow: 1000000 } },
         { type: "turn/end" },
       ],
       messages: [
@@ -18,7 +19,13 @@ export async function run() {
       ],
     });
     const route = summarize.routeOfSession(session);
-    assert.deepEqual(route, { provider: "deepseek", model: "deepseek-chat" });
+    assert.deepEqual(route, { provider: "deepseek-official", model: "deepseek-v4-flash" });
+    // request/header 单独也能解析（data.header.config）
+    const hdrOnly = fakeSession({ events: [{ type: "request/header", data: { header: { config: { provider: "p1", model: "m1" } }, reason: "initial" } }] });
+    assert.deepEqual(summarize.routeOfSession(hdrOnly), { provider: "p1", model: "m1" });
+    // request/context 单独也能解析（扁平形状）
+    const ctxOnly = fakeSession({ events: [{ type: "request/context", data: { provider: "p2", model: "m2" } }] });
+    assert.deepEqual(summarize.routeOfSession(ctxOnly), { provider: "p2", model: "m2" });
     const msgs = summarize.recentMessages(session);
     assert.equal(msgs.length, 2);
     assert.equal(msgs[0].role, "user");
