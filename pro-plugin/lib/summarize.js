@@ -5,6 +5,7 @@
 
 import { promises as fs } from "node:fs";
 import path from "node:path";
+import crypto from "node:crypto";
 import { jsonDoc, dataDir } from "./store.js";
 
 /**
@@ -148,11 +149,15 @@ export async function summarizeSession(deps, session) {
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
   try {
     const assembler = new MinimalAssembler();
+    // 与线上已验证的标题生成器（generateSessionTitleWithLlm）调用模式一致：
+    //   - purpose 必须是合法枚举 'compaction' | 'session-title'（session-title 还会让 DeepSeek 适配器关思考，适合小摘要）
+    //   - 消息需带 id（createUserMessage 会补 uuid，手写必须自带）
     const options = Object.freeze({
       provider: route.provider,
       model: route.model,
       messages: [
         {
+          id: crypto.randomUUID(),
           role: "user",
           content: [{ type: "text", text: framed }],
           source: { kind: "plugin", plugin: "dsh-pro" },
@@ -161,7 +166,7 @@ export async function summarizeSession(deps, session) {
       system: SUMMARY_PROMPT,
       maxTokens: MAX_OUTPUT_TOKENS,
       sessionId: session.id,
-      purpose: "pro-summary",
+      purpose: "session-title",
       signal: controller.signal,
     });
     for await (const chunk of llm.stream(options)) {
@@ -173,13 +178,14 @@ export async function summarizeSession(deps, session) {
       return { ok: false, error: "摘要生成超时" };
     }
     if (finish) {
-      if (finish.reason === "error") {
-        return { ok: false, error: "摘要生成失败: " + String(finish.failure?.message ?? finish.failure?.code ?? "llm error") };
+      const reason = typeof finish.reason === "string" ? finish.reason : finish.reason?.kind;
+      if (reason === "error") {
+        return { ok: false, error: "摘要生成失败: " + String(finish.failure?.message ?? finish.reason?.failure?.message ?? finish.reason?.failure?.code ?? "llm error") };
       }
-      if (finish.reason === "aborted") {
+      if (reason === "aborted") {
         return { ok: false, error: "摘要生成被中止" };
       }
-      if (finish.reason === "tool-calls") {
+      if (reason === "tool-calls") {
         return { ok: false, error: "摘要模型意外请求了工具" };
       }
     }
