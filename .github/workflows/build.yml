@@ -23,6 +23,16 @@ jobs:
         working-directory: src-tauri
         run: cargo build --release
 
+      - name: Stage built-in plugins (slim: sources only)
+        shell: pwsh
+        run: |
+          # 内置插件源码目录（正式版：dsh-files + dsh-plugin-image-input）
+          New-Item -ItemType Directory -Force installer\build\plugins
+          Copy-Item dsh-files installer\build\plugins\dsh-files -Recurse -Force
+          Copy-Item dsh-plugin-image-input installer\build\plugins\dsh-plugin-image-input -Recurse -Force
+          # 移除任何误入的 node_modules（精简版由桌面端首次启动提示 npm install）
+          Get-ChildItem installer\build\plugins -Directory -Filter node_modules -Recurse | Remove-Item -Recurse -Force
+
       - name: Package NSIS installer
         shell: pwsh
         run: |
@@ -41,6 +51,15 @@ jobs:
           $makensis = Get-ChildItem "$env:TEMP\nsis" -Recurse -Filter "makensis.exe" | Select-Object -First 1
           if (-not $makensis) { throw "makensis not found after NSIS extraction" }
           & $makensis.FullName installer\installer.nsi
+
+      - name: Stage full runtime (self-contained installer)
+        shell: pwsh
+        run: |
+          # 仅本地/手动 full 构建：把运行时与含 node_modules 的插件一并打入。
+          # CI 默认只出精简版；full 版由发布流程本地生成（见 tools/rel-full*.mjs）。
+          if (Test-Path "$env:DSH_FULL_RUNTIME_DIR") {
+            Copy-Item "$env:DSH_FULL_RUNTIME_DIR" installer\build\runtime -Recurse -Force
+          }
 
       - name: Upload installer artifact
         uses: actions/upload-artifact@v4

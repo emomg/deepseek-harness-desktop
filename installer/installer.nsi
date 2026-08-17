@@ -9,7 +9,7 @@ ${Using:StrFunc} UnStrRep
 
 !define APP_NAME "DeepSeek Harness"
 !define APP_EXE "dsh-desktop.exe"
-!define APP_VERSION "0.1.0"
+!define APP_VERSION "1.0.0"
 !define APP_ID "com.deepseek-harness.desktop"
 !define INST_DIR "$LOCALAPPDATA\Programs\DeepSeek Harness"
 
@@ -20,11 +20,11 @@ Name "${APP_NAME}"
 OutFile "${SETUP_NAME}"
 InstallDir "${INST_DIR}"
 RequestExecutionLevel user
-VIProductVersion "0.1.0.0"
+VIProductVersion "1.0.0.0"
 VIAddVersionKey /LANG=2052 "ProductName" "DeepSeek Harness Desktop"
 VIAddVersionKey /LANG=2052 "FileDescription" "DeepSeek Harness 桌面客户端安装程序"
-VIAddVersionKey /LANG=2052 "FileVersion" "0.1.0"
-VIAddVersionKey /LANG=2052 "ProductVersion" "0.1.0"
+VIAddVersionKey /LANG=2052 "FileVersion" "1.0.0"
+VIAddVersionKey /LANG=2052 "ProductVersion" "1.0.0"
 VIAddVersionKey /LANG=2052 "LegalCopyright" "Copyright (c) 2026 DeepSeek (MIT)"
 
 !define MUI_ICON "..\src-tauri\icons\icon.ico"
@@ -53,6 +53,11 @@ Section "主程序" SecMain
   File "build\${APP_EXE}"
   ; WebView2Loader.dll（GNU 工具链构建的动态依赖，必须与 exe 同目录）
   File "build\WebView2Loader.dll"
+  ; 内置 DSH 插件（dsh-files / dsh-plugin-image-input）。
+  ; -full 版：plugins 目录含 node_modules（装完即用）；
+  ; 精简版：只有源码，首次启动桌面端自动注册后提示 npm install。
+  SetOutPath "$INSTDIR\plugins"
+  File /r "build\plugins\*.*"
   ; 自包含安装包：把 Node.js + dsh 运行时一并装入（makensis -DRUNTIME_DIR=... 时启用）
   !ifdef RUNTIME_DIR
     SetOutPath "$INSTDIR\runtime"
@@ -137,6 +142,7 @@ Section "Uninstall"
   Delete "$INSTDIR\MicrosoftEdgewebview2Setup.exe"
   Delete "$INSTDIR\Uninstall.exe"
   RMDir /r "$INSTDIR\runtime"
+  RMDir /r "$INSTDIR\plugins"
   RMDir "$INSTDIR"
   Delete "$SMPROGRAMS\DeepSeek Harness\DeepSeek Harness.lnk"
   Delete "$SMPROGRAMS\DeepSeek Harness\卸载 DeepSeek Harness.lnk"

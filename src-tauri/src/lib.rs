@@ -416,6 +416,124 @@ fn show_dsh_not_ready_dialog() {
     }
 }
 
+/// 定位用户 web profile 目录（$DSH_HOME/profiles/web，缺省 ~/.dsh/profiles/web）。
+fn web_profile_dir() -> Option<PathBuf> {
+    let home = std::env::var_os("DSH_HOME")
+        .map(PathBuf::from)
+        .or_else(|| {
+            let user = std::env::var_os("USERPROFILE").or_else(|| std::env::var_os("HOME"))?;
+            Some(Path::new(&user).join(".dsh"))
+        })?;
+    Some(home.join("profiles").join("web"))
+}
+
+/// 安装包内置的插件目录（exe 同级 plugins\<name>\，每个含 package.json）。
+fn bundled_plugin_dirs() -> Vec<PathBuf> {
+    let Some(exe) = std::env::current_exe().ok() else { return Vec::new() };
+    let Some(dir) = exe.parent() else { return Vec::new() };
+    let plugins_root = dir.join("plugins");
+    let Ok(entries) = std::fs::read_dir(&plugins_root) else { return Vec::new() };
+    let mut out = Vec::new();
+    for entry in entries.flatten() {
+        let path = entry.path();
+        if path.is_dir() && path.join("package.json").is_file() {
+            out.push(path);
+        }
+    }
+    out.sort();
+    out
+}
+
+/// 读取插件 package.json 的 name 字段（bundle 注册名，如 "dsh-files"）。
+fn plugin_package_name(dir: &Path) -> Option<String> {
+    let text = std::fs::read_to_string(dir.join("package.json")).ok()?;
+    let json: serde_json::Value = serde_json::from_str(&text).ok()?;
+    json.get("name")?.as_str().map(|s| s.to_string())
+}
+
+/// 确保安装包内置插件已注册进 web profile：
+///  - 保证 profile 目录与基础 package.json 存在；
+///  - 对每个内置插件，若 `dsh.profile.bundles` 未含其 name，则
+///    junction 到 profile\node_modules\<name> 并追加 bundle；
+///  - 幂等：已注册的插件跳过，可安全重复调用。
+/// 返回注册成功/失败的插件数（仅日志用）。
+fn ensure_plugins_registered() -> (usize, usize) {
+    let Some(profile) = web_profile_dir() else { return (0, 0) };
+    if std::fs::create_dir_all(&profile).is_err() {
+        return (0, 0);
+    }
+    // 基础 package.json：缺省时创建（bundles 留空，dsh 首次启动自行补 base/web-app）。
+    let pkg_path = profile.join("package.json");
+    if !pkg_path.is_file() {
+        let base = r#"{
+  "name": "dsh-profile-web",
+  "private": true,
+  "dependencies": {},
+  "dsh": { "profile": { "bundles": [] } }
+}
+"#;
+        let _ = std::fs::write(&pkg_path, base);
+    }
+    let Ok(text) = std::fs::read_to_string(&pkg_path) else { return (0, 0) };
+    let Ok(mut pkg) = serde_json::from_str::<serde_json::Value>(&text) else { return (0, 0) };
+
+    let node_modules = profile.join("node_modules");
+    let _ = std::fs::create_dir_all(&node_modules);
+
+    let mut ok = 0usize;
+    let mut fail = 0usize;
+    for plugin in bundled_plugin_dirs() {
+        let Some(name) = plugin_package_name(&plugin) else { continue };
+        // bundles 已含 → 幂等跳过
+        let bundles = pkg
+            .pointer("/dsh/profile/bundles")
+            .and_then(|b| b.as_array())
+            .cloned()
+            .unwrap_or_default();
+        if bundles.iter().any(|b| b.as_str() == Some(name.as_str())) {
+            ok += 1;
+            continue;
+        }
+        // junction 插件目录 → profile\node_modules\<name>
+        let link = node_modules.join(&name);
+        let linked = if link.is_dir() {
+            true // 已存在（之前注册过或用户手动装过）
+        } else {
+            // junction 无需管理员权限；mklink /J <link> <target>
+            let status = Command::new("cmd")
+                .args(["/c", "mklink", "/J"])
+                .arg(&link)
+                .arg(&plugin)
+                .creation_flags(CREATE_NO_WINDOW)
+                .status();
+            status.map(|s| s.success()).unwrap_or(false)
+        };
+        if !linked {
+            fail += 1;
+            pro_log(&format!("[plugins] failed to link {name}"));
+            continue;
+        }
+        // 追加 bundle
+        let mut new_bundles = bundles;
+        new_bundles.push(serde_json::Value::String(name.clone()));
+        if let Some(obj) = pkg.as_object_mut() {
+            if let Some(dsh) = obj.get_mut("dsh").and_then(|d| d.as_object_mut()) {
+                if let Some(profile_obj) = dsh.get_mut("profile").and_then(|p| p.as_object_mut()) {
+                    profile_obj.insert("bundles".into(), serde_json::Value::Array(new_bundles));
+                }
+            }
+        }
+        if std::fs::write(&pkg_path, serde_json::to_string_pretty(&pkg).unwrap_or_default()).is_ok() {
+            ok += 1;
+            pro_log(&format!("[plugins] registered {name}"));
+        } else {
+            fail += 1;
+            pro_log(&format!("[plugins] failed to persist {name}"));
+        }
+    }
+    (ok, fail)
+}
+
 fn spawn_dsh() -> Option<Child> {
     // 0) 安装包自带的捆绑运行时（最优先，小白无需安装任何东西）
     if let Some((node, bin_js)) = bundled_runtime() {
@@ -498,7 +616,17 @@ pub fn run() {
             // 后台线程拉起 dsh（不阻塞窗口显示）并等待端口就绪
             let app_handle = app.handle().clone();
             std::thread::spawn(move || {
-                let child = if port_alive() { None } else { spawn_dsh() };
+                // 安装包内置插件：dsh 启动前注册进 web profile（幂等）。
+                // 仅当没有复用已有 dsh 实例时才注册——端口已活说明 profile 已由
+                // 既有环境管理，直接复用，不打扰用户配置。
+                let alive = port_alive();
+                if !alive {
+                    let (ok, fail) = ensure_plugins_registered();
+                    if ok > 0 || fail > 0 {
+                        pro_log(&format!("[plugins] registered {ok} ok, {fail} failed"));
+                    }
+                }
+                let child = if alive { None } else { spawn_dsh() };
                 if let Some(state) = app_handle.try_state::<DshServer>() {
                     if let Ok(mut guard) = state.0.lock() {
                         *guard = child;
