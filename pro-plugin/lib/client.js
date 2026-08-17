@@ -187,6 +187,9 @@ window.__ModuleLoader__.load({
       "review.workspace": "选择工作区",
       "review.empty": "还没有评审。选择一个工作区开始评审：捕获基线 → 逐文件审阅差异 → 接受/拒绝 → 提交。",
       "review.open": "打开",
+      "review.view.list": "单列表",
+      "review.view.workspace": "按工作区",
+      "review.count": "条",
       "review.accept": "接受",
       "review.reject": "拒绝",
       "review.diff": "差异",
@@ -231,6 +234,9 @@ window.__ModuleLoader__.load({
       "tpl.cancel": "Cancel",
       "tpl.copied": "Copied to clipboard.",
       "review.start": "Start review",
+      "review.view.list": "List",
+      "review.view.workspace": "By workspace",
+      "review.count": "items",
       "review.accept": "Accept",
       "review.reject": "Reject",
       "review.diff": "Diff",
@@ -451,6 +457,7 @@ window.__ModuleLoader__.load({
       const [dash, setDash] = useState(null);
       const [reviews, setReviews] = useState(null);
       const [wsPath, setWsPath] = useState("");
+      const [view, setView] = useState("list");
       const [openId, setOpenId] = useState(null);
       const [detail, setDetail] = useState(null);
       const [diffText, setDiffText] = useState(null);
@@ -543,6 +550,13 @@ window.__ModuleLoader__.load({
 
       const workspaces = dash ?? [];
 
+      const reviewRow = (r) =>
+        h("div", { className: "dsp2-row", key: r.id },
+          h("div", { style: { flex: 1, minWidth: 0 } },
+            h("div", { className: "dsp2-rowName" }, r.workspacePath),
+            h("div", { className: "dsp2-rowDesc" }, fmtTime(r.createdAt) + " · " + t("review.status." + r.status) + " · " + Object.keys(r.files ?? {}).length + " files")),
+          IconBtn({ onClick: () => openReview(r.id) }, t("review.open")));
+
       if (detail) {
         const files = detail.files ?? [];
         const stLabel = { M: t("review.file.modified"), A: t("review.file.added"), D: t("review.file.deleted") };
@@ -578,12 +592,30 @@ window.__ModuleLoader__.load({
           h("button", { className: "dsp2-btn primary", disabled: busy, onClick: start }, busy ? t("review.starting") : t("review.start"))),
         !reviews
           ? h("div", { className: "dsp2-empty" }, "…")
-          : reviews.map((r) =>
-              h("div", { className: "dsp2-row", key: r.id },
-                h("div", { style: { flex: 1, minWidth: 0 } },
-                  h("div", { className: "dsp2-rowName" }, r.workspacePath),
-                  h("div", { className: "dsp2-rowDesc" }, fmtTime(r.createdAt) + " · " + t("review.status." + r.status) + " · " + Object.keys(r.files ?? {}).length + " files")),
-                IconBtn({ onClick: () => openReview(r.id) }, t("review.open")))),
+          : h("div", null, [
+              h("select", { className: "dsp2-select", value: view, onChange: (e) => setView(e.target.value), style: { marginBottom: 6 } },
+                h("option", { value: "list" }, t("review.view.list")),
+                h("option", { value: "workspace" }, t("review.view.workspace"))),
+              view === "workspace"
+                ? (() => {
+                    const groups = new Map();
+                    for (const r of reviews) {
+                      if (!groups.has(r.workspacePath)) groups.set(r.workspacePath, []);
+                      groups.get(r.workspacePath).push(r);
+                    }
+                    const wsList = [...groups.entries()]
+                      .map(([path, rs]) => ({ path, rs: [...rs].sort((a, b) => b.createdAt - a.createdAt) }))
+                      .sort((a, b) => b.rs[0].createdAt - a.rs[0].createdAt);
+                    return wsList.map(({ path, rs }) =>
+                      h("div", { className: "dsp2-ws", key: path },
+                        h("div", { className: "dsp2-wsHead" },
+                          h("div", { className: "dsp2-wsName", title: path }, path),
+                          h("div", { className: "dsp2-wsMeta" }, rs.length + " " + t("review.count"))),
+                        h("div", { className: "dsp2-wsPath" }, path),
+                        rs.map(reviewRow)));
+                  })()
+                : reviews.map(reviewRow),
+            ]),
       ]);
     }
 
