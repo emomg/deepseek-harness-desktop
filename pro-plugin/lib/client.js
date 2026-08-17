@@ -103,6 +103,37 @@ window.__ModuleLoader__.load({
       document.head.appendChild(tag);
     }
 
+    // ---- 设置页（个性化 / 技能 / MCP）样式 ----
+    const SET_CSS_ID = "dsh-pro-settings-css";
+    if (document.getElementById(SET_CSS_ID) === null) {
+      const tag = document.createElement("style");
+      tag.id = SET_CSS_ID;
+      tag.dataset.plugin = "@dsh-pro/core";
+      tag.textContent = `
+.dsp2-setSection{width:100%;max-width:760px;color:var(--dsw-alias-label-primary,#f9fafb);flex-direction:column;gap:14px;display:flex}
+.dsp2-setCard{background:var(--dsw-alias-bg-layer-2,#2c2c2e);border:1px solid var(--dsw-alias-border-l1,rgba(255,255,255,.06));border-radius:12px;padding:14px 16px}
+.dsp2-setTitle{font-size:14px;font-weight:600;margin-bottom:10px}
+.dsp2-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--dsw-alias-border-l1,rgba(255,255,255,.04))}
+.dsp2-row:last-child{border-bottom:none}
+.dsp2-rowLabel{flex:1;min-width:0;font-size:13px}
+.dsp2-rowHint{font-size:11px;color:var(--dsw-alias-label-tertiary,#adb2b8);line-height:1.7}
+.dsp2-range{flex:none;width:160px;accent-color:#5b8cff;cursor:pointer}
+.dsp2-val{flex:none;width:46px;text-align:right;font-size:12px;color:var(--dsw-alias-label-tertiary,#adb2b8);font-family:"Cascadia Code",Consolas,monospace}
+.dsp2-check{accent-color:#5b8cff;width:16px;height:16px;cursor:pointer}
+.dsp2-skillName{font-family:"Cascadia Code",Consolas,monospace;font-size:12px;font-weight:600}
+.dsp2-tag{display:inline-flex;font-size:10px;border-radius:5px;padding:0 6px;line-height:16px;margin-right:6px;background:var(--dsw-alias-bg-layer-2,#2c2c2e);color:var(--dsw-alias-label-secondary,#cfd3d6)}
+.dsp2-tag.ok{background:rgba(34,197,94,.16);color:#7ee2a8}
+.dsp2-tag.warn{background:rgba(245,158,11,.16);color:#f5c26b}
+.dsp2-stateDot{width:8px;height:8px;border-radius:50%;background:var(--dsw-alias-label-tertiary,#adb2b8);flex:none;display:inline-block}
+.dsp2-stateDot.active{background:#22c55e}
+.dsp2-stateDot.failed{background:#f25a5a}
+.dsp2-stateDot.pending,.dsp2-stateDot.loading{background:#5b8cff}
+.dsp2-serverName{font-family:"Cascadia Code",Consolas,monospace;font-size:13px;font-weight:600}
+.dsp2-mono{font-family:"Cascadia Code",Consolas,monospace;font-size:11px;color:var(--dsw-alias-label-tertiary,#adb2b8);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+`;
+      document.head.appendChild(tag);
+    }
+
     // ------------------------------------------------------------ API 助手
     async function api(path, options) {
       const res = await fetch(path, {
@@ -187,11 +218,8 @@ window.__ModuleLoader__.load({
       "review.workspace": "选择工作区",
       "review.empty": "还没有评审。选择一个工作区开始评审：捕获基线 → 逐文件审阅差异 → 接受/拒绝 → 提交。",
       "review.open": "打开",
-      "review.view.list": "单列表",
-      "review.view.workspace": "按工作区",
       "review.pickSession": "选择要评审的会话…",
       "review.wholeWorkspace": "整个工作区（不绑定会话）",
-      "review.count": "条",
       "review.accept": "接受",
       "review.reject": "拒绝",
       "review.diff": "差异",
@@ -209,6 +237,41 @@ window.__ModuleLoader__.load({
       "review.starting": "开始中…",
       "review.diffFailed": "无法加载差异",
       "common.err": "出错",
+      "settings.personalize": "个性化",
+      "settings.skill": "技能",
+      "settings.mcp": "MCP",
+      "personalize.title": "个性化 · 黑鲸鱼主题",
+      "personalize.enabled": "启用黑鲸鱼背景",
+      "personalize.enabledHint": "主面板默认使用液态磨砂玻璃，背后透出 DeepSeek 黑鲸鱼（玻璃拟态，参考 Codex 风格）。所有选项即时生效并保存在本机。",
+      "personalize.opacity": "鲸鱼可见度",
+      "personalize.blur": "磨砂模糊半径",
+      "personalize.glass": "面板不透明度",
+      "personalize.liquid": "液态流动动画",
+      "personalize.reset": "恢复默认",
+      "personalize.resetDone": "已恢复默认背景",
+      "skill.title": "技能管理",
+      "skill.empty": "暂无可用技能。",
+      "skill.presets": "预设技能库",
+      "skill.none": "无",
+      "skill.refresh": "刷新",
+      "skill.model": "模型可调用",
+      "skill.user": "用户可调用",
+      "skill.errorHint": "技能数据暂时不可用，请稍后重试；若持续如此，重启应用后生效。",
+      "mcp.title": "MCP 服务器管理",
+      "mcp.empty": "未配置 MCP 服务器。可在 cordis 配置中添加 mcp-client 插件实例。",
+      "mcp.refresh": "刷新",
+      "mcp.transport": "传输",
+      "mcp.command": "命令",
+      "mcp.url": "地址",
+      "mcp.args": "参数",
+      "mcp.env": "环境变量",
+      "mcp.headers": "请求头",
+      "mcp.tools": "工具",
+      "mcp.reconnect": "自动重连",
+      "mcp.failOnStartup": "启动失败即报错",
+      "mcp.disabled": "已禁用",
+      "mcp.errorHint": "MCP 数据暂时不可用，请稍后重试；若持续如此，重启应用后生效。",
+      "common.loading": "加载中…",
     };
     const en = {
       "entry.label": "Pro Panel",
@@ -236,11 +299,8 @@ window.__ModuleLoader__.load({
       "tpl.cancel": "Cancel",
       "tpl.copied": "Copied to clipboard.",
       "review.start": "Start review",
-      "review.view.list": "List",
-      "review.view.workspace": "By workspace",
       "review.pickSession": "Pick a session to review…",
       "review.wholeWorkspace": "Whole workspace (no session)",
-      "review.count": "items",
       "review.accept": "Accept",
       "review.reject": "Reject",
       "review.diff": "Diff",
@@ -249,6 +309,41 @@ window.__ModuleLoader__.load({
       "review.status.open": "open",
       "review.status.committed": "committed",
       "review.status.discarded": "discarded",
+      "settings.personalize": "Personalize",
+      "settings.skill": "Skills",
+      "settings.mcp": "MCP",
+      "personalize.title": "Personalize · Whale theme",
+      "personalize.enabled": "Enable whale background",
+      "personalize.enabledHint": "The main panel defaults to liquid frosted glass with the DeepSeek black whale behind it (glassmorphism, Codex-inspired). Changes apply instantly and are saved locally.",
+      "personalize.opacity": "Whale visibility",
+      "personalize.blur": "Frost blur radius",
+      "personalize.glass": "Panel opacity",
+      "personalize.liquid": "Liquid flow animation",
+      "personalize.reset": "Restore defaults",
+      "personalize.resetDone": "Default background restored",
+      "skill.title": "Skills",
+      "skill.empty": "No skills available.",
+      "skill.presets": "Preset skill library",
+      "skill.none": "none",
+      "skill.refresh": "Refresh",
+      "skill.model": "model",
+      "skill.user": "user",
+      "skill.errorHint": "Skill data is temporarily unavailable; retry shortly. If it persists, restart the app.",
+      "mcp.title": "MCP Servers",
+      "mcp.empty": "No MCP servers configured. Add mcp-client plugin entries in the cordis configuration.",
+      "mcp.refresh": "Refresh",
+      "mcp.transport": "Transport",
+      "mcp.command": "Command",
+      "mcp.url": "URL",
+      "mcp.args": "Args",
+      "mcp.env": "Env",
+      "mcp.headers": "Headers",
+      "mcp.tools": "tools",
+      "mcp.reconnect": "reconnect",
+      "mcp.failOnStartup": "fail-fast",
+      "mcp.disabled": "disabled",
+      "mcp.errorHint": "MCP data is temporarily unavailable; retry shortly. If it persists, restart the app.",
+      "common.loading": "Loading…",
     };
 
     // ------------------------------------------------------------ 通用小组件
@@ -460,9 +555,7 @@ window.__ModuleLoader__.load({
     function ReviewTab({ t }) {
       const [dash, setDash] = useState(null);
       const [reviews, setReviews] = useState(null);
-      const [wsPath, setWsPath] = useState("");
       const [target, setTarget] = useState("");
-      const [view, setView] = useState("list");
       const [openId, setOpenId] = useState(null);
       const [detail, setDetail] = useState(null);
       const [diffText, setDiffText] = useState(null);
@@ -619,30 +712,7 @@ window.__ModuleLoader__.load({
           h("button", { className: "dsp2-btn primary", disabled: busy, onClick: start }, busy ? t("review.starting") : t("review.start"))),
         !reviews
           ? h("div", { className: "dsp2-empty" }, "…")
-          : h("div", null, [
-              h("select", { className: "dsp2-select", value: view, onChange: (e) => setView(e.target.value), style: { marginBottom: 6 } },
-                h("option", { value: "list" }, t("review.view.list")),
-                h("option", { value: "workspace" }, t("review.view.workspace"))),
-              view === "workspace"
-                ? (() => {
-                    const groups = new Map();
-                    for (const r of reviews) {
-                      if (!groups.has(r.workspacePath)) groups.set(r.workspacePath, []);
-                      groups.get(r.workspacePath).push(r);
-                    }
-                    const wsList = [...groups.entries()]
-                      .map(([path, rs]) => ({ path, rs: [...rs].sort((a, b) => b.createdAt - a.createdAt) }))
-                      .sort((a, b) => b.rs[0].createdAt - a.rs[0].createdAt);
-                    return wsList.map(({ path, rs }) =>
-                      h("div", { className: "dsp2-ws", key: path },
-                        h("div", { className: "dsp2-wsHead" },
-                          h("div", { className: "dsp2-wsName", title: path }, path),
-                          h("div", { className: "dsp2-wsMeta" }, rs.length + " " + t("review.count"))),
-                        h("div", { className: "dsp2-wsPath" }, path),
-                        rs.map(reviewRow)));
-                  })()
-                : reviews.map(reviewRow),
-            ]),
+          : reviews.map(reviewRow),
       ]);
     }
 
@@ -678,6 +748,231 @@ window.__ModuleLoader__.load({
       );
     }
 
+    // ------------------------------------------------------------ 设置页：个性化 / 技能 / MCP
+    const PREF_KEY = "dsh-personalize-v1";
+    const PREF_DEFAULTS = { enabled: true, opacity: null, blur: null, glass: null, liquid: true };
+
+    function applyPrefsToDom(p) {
+      const html = document.documentElement;
+      html.style.setProperty("--dsh-whale-enabled", p.enabled === false ? "0" : "1");
+      if (p.opacity != null) html.style.setProperty("--dsh-whale-opacity", String(p.opacity));
+      if (p.blur != null) html.style.setProperty("--dsh-whale-blur", p.blur + "px");
+      if (p.glass != null) html.style.setProperty("--dsh-whale-glass", String(p.glass));
+      html.style.setProperty("--dsh-whale-liquid", p.liquid === false ? "0" : "1");
+      html.setAttribute("data-whale-liquid", p.liquid === false ? "0" : "1");
+      html.classList.toggle("dsh-whale", p.enabled !== false);
+    }
+    function loadPrefs() {
+      try {
+        const raw = localStorage.getItem(PREF_KEY);
+        return Object.assign({}, PREF_DEFAULTS, raw ? JSON.parse(raw) : {});
+      } catch {
+        return Object.assign({}, PREF_DEFAULTS);
+      }
+    }
+    function savePrefs(p) {
+      try { localStorage.setItem(PREF_KEY, JSON.stringify(p)); } catch { /* ignore */ }
+      applyPrefsToDom(p);
+    }
+
+    function Row({ label, control, value }) {
+      return h("div", { className: "dsp2-row" }, [
+        h("div", { className: "dsp2-rowLabel" }, label),
+        value ? h("div", { className: "dsp2-val" }, value) : null,
+        control,
+      ]);
+    }
+
+    function PersonalizeSection({ t }) {
+      const [prefs, setPrefs] = useState(() => {
+        const p = loadPrefs();
+        if (p.opacity == null || p.blur == null || p.glass == null) {
+          const cs = typeof getComputedStyle === "function" ? getComputedStyle(document.body) : null;
+          const cv = (name, d) => {
+            if (!cs) return d;
+            const v = cs.getPropertyValue(name);
+            return v ? parseFloat(v) : d;
+          };
+          if (p.opacity == null) p.opacity = Math.round(cv("--dsh-whale-opacity", 0.5) * 100) / 100;
+          if (p.blur == null) p.blur = Math.round(cv("--dsh-whale-blur", 22));
+          if (p.glass == null) p.glass = Math.round(cv("--dsh-whale-glass", 0.9) * 100) / 100;
+        }
+        return p;
+      });
+      const [saved, setSaved] = useState(false);
+      const update = (patch) => {
+        setSaved(false);
+        setPrefs((prev) => {
+          const next = Object.assign({}, prev, patch);
+          savePrefs(next);
+          return next;
+        });
+      };
+      const reset = () => {
+        try { localStorage.removeItem(PREF_KEY); } catch { /* ignore */ }
+        setPrefs(Object.assign({}, PREF_DEFAULTS));
+        applyPrefsToDom(Object.assign({}, PREF_DEFAULTS));
+        setSaved(true);
+      };
+      const pct = (v) => Math.round((v ?? 0.5) * 100) + "%";
+      const opacityVal = prefs.opacity != null ? prefs.opacity : 0.5;
+      const blurVal = prefs.blur != null ? prefs.blur : 22;
+      const glassVal = prefs.glass != null ? prefs.glass : 0.9;
+      return h("div", { className: "dsp2-setSection" }, [
+        h("div", { className: "dsp2-setCard" }, [
+          h("div", { className: "dsp2-setTitle" }, t("personalize.title")),
+          h("div", { className: "dsp2-rowHint", style: { marginBottom: 8 } }, t("personalize.enabledHint")),
+          Row({
+            label: t("personalize.enabled"),
+            control: h("input", {
+              type: "checkbox",
+              className: "dsp2-check",
+              checked: prefs.enabled !== false,
+              onChange: (e) => update({ enabled: e.target.checked }),
+            }),
+          }),
+          Row({
+            label: t("personalize.opacity"),
+            value: pct(opacityVal),
+            control: h("input", {
+              type: "range", className: "dsp2-range", min: 0, max: 1, step: 0.05,
+              value: opacityVal,
+              onChange: (e) => update({ opacity: Number(e.target.value) }),
+            }),
+          }),
+          Row({
+            label: t("personalize.blur"),
+            value: blurVal + "px",
+            control: h("input", {
+              type: "range", className: "dsp2-range", min: 0, max: 60, step: 2,
+              value: blurVal,
+              onChange: (e) => update({ blur: Number(e.target.value) }),
+            }),
+          }),
+          Row({
+            label: t("personalize.glass"),
+            value: pct(glassVal),
+            control: h("input", {
+              type: "range", className: "dsp2-range", min: 0.5, max: 1, step: 0.02,
+              value: glassVal,
+              onChange: (e) => update({ glass: Number(e.target.value) }),
+            }),
+          }),
+          Row({
+            label: t("personalize.liquid"),
+            control: h("input", {
+              type: "checkbox", className: "dsp2-check",
+              checked: prefs.liquid !== false,
+              onChange: (e) => update({ liquid: e.target.checked }),
+            }),
+          }),
+          h("div", { style: { display: "flex", gap: 8, alignItems: "center", marginTop: 10 } },
+            h("button", { className: "dsp2-btn sm", onClick: reset }, t("personalize.reset")),
+            saved ? h("span", { className: "dsp2-rowHint" }, t("personalize.resetDone")) : null),
+        ]),
+      ]);
+    }
+
+    function SkillSection({ t }) {
+      const [state, setState] = useState({ status: "loading" });
+      const [gen, setGen] = useState(0);
+      useEffect(() => {
+        let current = true;
+        setState({ status: "loading" });
+        api("/api/pro/skills").then(
+          (d) => { if (current) setState({ status: "ready", skills: d.skills ?? [] }); },
+          (e) => { if (current) setState({ status: "error", message: String(e?.message ?? e) }); },
+        );
+        return () => { current = false; };
+      }, [gen]);
+      if (state.status === "loading") return h("div", { className: "dsp2-setSection" }, h("div", { className: "dsp2-empty" }, t("common.loading")));
+      if (state.status === "error") return h("div", { className: "dsp2-setSection" }, [
+        h("div", { className: "dsp2-empty" }, t("common.err") + ": " + state.message),
+        h("div", { className: "dsp2-rowHint" }, t("skill.errorHint")),
+        h("div", null, h("button", { className: "dsp2-btn sm", onClick: () => setGen((g) => g + 1) }, t("skill.refresh"))),
+      ]);
+      const rows = state.skills ?? [];
+      const presets = state.presets ?? [];
+      return h("div", { className: "dsp2-setSection" }, [
+        h("div", { style: { textAlign: "right" } },
+          h("button", { className: "dsp2-btn sm", onClick: () => setGen((g) => g + 1) }, t("skill.refresh"))),
+        rows.length === 0
+          ? h("div", { className: "dsp2-empty" }, t("skill.empty"))
+          : h("div", { className: "dsp2-setCard" }, rows.map((s) =>
+              h("div", { className: "dsp2-row", key: s.name }, [
+                h("div", { style: { flex: 1, minWidth: 0 } }, [
+                  h("div", { className: "dsp2-skillName" }, s.name),
+                  h("div", { className: "dsp2-rowHint", style: { marginTop: 2 } },
+                    [(s.description || ""), s.provider ? " · " + s.provider : ""].join("")),
+                  h("div", { style: { marginTop: 5 } }, [
+                    s.modelInvocable ? h("span", { className: "dsp2-tag ok" }, t("skill.model")) : null,
+                    s.userInvocable ? h("span", { className: "dsp2-tag" }, t("skill.user")) : null,
+                  ]),
+                ]),
+              ]))),
+        presets.length > 0 && h("div", { className: "dsp2-setCard", style: { marginTop: 8 } }, [
+          h("div", { className: "dsp2-setTitle" }, t("skill.presets")),
+          presets.map((p) =>
+            h("div", { className: "dsp2-row", key: p.id }, [
+              h("div", { style: { flex: 1, minWidth: 0 } }, [
+                h("div", { className: "dsp2-skillName" }, p.name),
+                h("div", { className: "dsp2-mono" }, p.path),
+                h("div", { style: { marginTop: 5 } },
+                  (p.skills ?? []).length
+                    ? p.skills.map((s) => h("span", { className: "dsp2-tag", key: s.name, title: s.description || undefined }, s.name))
+                    : h("span", { className: "dsp2-tag" }, t("skill.none"))),
+              ]),
+            ])),
+        ]),
+      ]);
+    }
+
+    function McpSection({ t }) {
+      const [state, setState] = useState({ status: "loading" });
+      const [gen, setGen] = useState(0);
+      useEffect(() => {
+        let current = true;
+        setState({ status: "loading" });
+        api("/api/pro/mcp").then(
+          (d) => { if (current) setState({ status: "ready", servers: d.servers ?? [] }); },
+          (e) => { if (current) setState({ status: "error", message: String(e?.message ?? e) }); },
+        );
+        return () => { current = false; };
+      }, [gen]);
+      if (state.status === "loading") return h("div", { className: "dsp2-setSection" }, h("div", { className: "dsp2-empty" }, t("common.loading")));
+      if (state.status === "error") return h("div", { className: "dsp2-setSection" }, [
+        h("div", { className: "dsp2-empty" }, t("common.err") + ": " + state.message),
+        h("div", { className: "dsp2-rowHint" }, t("mcp.errorHint")),
+        h("div", null, h("button", { className: "dsp2-btn sm", onClick: () => setGen((g) => g + 1) }, t("mcp.refresh"))),
+      ]);
+      const servers = state.servers ?? [];
+      return h("div", { className: "dsp2-setSection" }, [
+        h("div", { style: { textAlign: "right" } },
+          h("button", { className: "dsp2-btn sm", onClick: () => setGen((g) => g + 1) }, t("mcp.refresh"))),
+        servers.length === 0
+          ? h("div", { className: "dsp2-empty" }, t("mcp.empty"))
+          : servers.map((s) =>
+              h("div", { className: "dsp2-setCard", key: s.serverName, style: { marginBottom: 8 } }, [
+                h("div", { style: { display: "flex", alignItems: "center", gap: 8 } },
+                  h("span", { className: "dsp2-stateDot " + (s.state ?? "") }),
+                  h("span", { className: "dsp2-serverName", style: { flex: 1, minWidth: 0 } }, s.serverName),
+                  h("span", { className: "dsp2-tag" }, t("mcp.transport") + ": " + s.transport),
+                  s.disabled ? h("span", { className: "dsp2-tag warn" }, t("mcp.disabled")) : null,
+                  s.reconnectEnabled ? h("span", { className: "dsp2-tag ok" }, t("mcp.reconnect")) : null,
+                  s.failOnStartupError ? h("span", { className: "dsp2-tag" }, t("mcp.failOnStartup")) : null,
+                  h("span", { className: "dsp2-tag" }, s.toolCount + " " + t("mcp.tools"))),
+                h("div", { className: "dsp2-mono", style: { marginTop: 6 } },
+                  s.transport === "stdio"
+                    ? s.command + (s.args?.length ? " " + s.args.join(" ") : "")
+                    : s.url || ""),
+                h("div", { className: "dsp2-rowHint", style: { marginTop: 2 } }, [
+                  s.envKeys?.length ? t("mcp.env") + ": " + s.envKeys.join(", ") : null,
+                  s.headerKeys?.length ? (s.envKeys?.length ? " · " : "") + t("mcp.headers") + ": " + s.headerKeys.join(", ") : null,
+                ].filter(Boolean).join("") || null),
+              ])),
+      ]);
+    }
+
     // ------------------------------------------------------------ 插件体
     const inject = ["slots", "locale", "commandUi", "sessions"];
 
@@ -691,6 +986,29 @@ window.__ModuleLoader__.load({
 
       ctx.slots.inject("shell.overlay", () =>
         ctx.slots.register({ name: "shell.overlay", id: "dsh-pro-panel" }, () => h(Panel, { t })));
+
+      // ---- 设置 → 左侧列表新增：个性化 / 技能 / MCP ----
+      ctx.slots.inject("settings.section", () => ctx.slots.register({
+        name: "settings.section",
+        id: "personalize",
+        order: 12,
+        label: () => t("settings.personalize"),
+        locale: NS,
+      }, () => h(PersonalizeSection, { t })));
+      ctx.slots.inject("settings.section", () => ctx.slots.register({
+        name: "settings.section",
+        id: "skill",
+        order: 22,
+        label: () => t("settings.skill"),
+        locale: NS,
+      }, () => h(SkillSection, { t })));
+      ctx.slots.inject("settings.section", () => ctx.slots.register({
+        name: "settings.section",
+        id: "mcp",
+        order: 32,
+        label: () => t("settings.mcp"),
+        locale: NS,
+      }, () => h(McpSection, { t })));
 
       // ---- /tpl 命令：选择模板 → 填充变量 → 发送到当前会话 ----
       ctx.inject(["commandUi", "sessions"], (scope) => {
