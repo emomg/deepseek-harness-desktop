@@ -189,6 +189,8 @@ window.__ModuleLoader__.load({
       "review.open": "打开",
       "review.view.list": "单列表",
       "review.view.workspace": "按工作区",
+      "review.pickSession": "选择要评审的会话…",
+      "review.wholeWorkspace": "整个工作区（不绑定会话）",
       "review.count": "条",
       "review.accept": "接受",
       "review.reject": "拒绝",
@@ -236,6 +238,8 @@ window.__ModuleLoader__.load({
       "review.start": "Start review",
       "review.view.list": "List",
       "review.view.workspace": "By workspace",
+      "review.pickSession": "Pick a session to review…",
+      "review.wholeWorkspace": "Whole workspace (no session)",
       "review.count": "items",
       "review.accept": "Accept",
       "review.reject": "Reject",
@@ -457,6 +461,7 @@ window.__ModuleLoader__.load({
       const [dash, setDash] = useState(null);
       const [reviews, setReviews] = useState(null);
       const [wsPath, setWsPath] = useState("");
+      const [target, setTarget] = useState("");
       const [view, setView] = useState("list");
       const [openId, setOpenId] = useState(null);
       const [detail, setDetail] = useState(null);
@@ -479,10 +484,13 @@ window.__ModuleLoader__.load({
       }, [loadReviews]);
 
       const start = async () => {
-        if (!wsPath) { window.alert(t("review.workspace")); return; }
+        if (!target) { window.alert(t("review.pickSession")); return; }
         setBusy(true);
         try {
-          const d = await api("/api/pro/review/start", { method: "POST", body: { workspacePath: wsPath } });
+          const body = target.startsWith("session:")
+            ? { sessionId: target.slice(8) }
+            : { workspacePath: target.slice(3) };
+          const d = await api("/api/pro/review/start", { method: "POST", body });
           setOpenId(d.review.id);
           await loadReviews();
         } catch (e) {
@@ -600,9 +608,14 @@ window.__ModuleLoader__.load({
       return h("div", null, [
         h("div", { className: "dsp2-hint" }, t("review.empty")),
         h("div", { style: { display: "flex", gap: 6, alignItems: "center", marginBottom: 8 } },
-          h("select", { className: "dsp2-select", value: wsPath, onChange: (e) => setWsPath(e.target.value) },
-            h("option", { value: "" }, t("review.workspace") + "…"),
-            workspaces.map((w) => h("option", { value: w.path, key: w.workspaceId }, w.title))),
+          h("select", { className: "dsp2-select", value: target, onChange: (e) => setTarget(e.target.value), style: { flex: 1, minWidth: 0 } },
+            h("option", { value: "" }, t("review.pickSession")),
+            workspaces.map((w) => [
+              ...(w.sessions ?? []).map((s) =>
+                h("option", { value: "session:" + s.id, key: s.id },
+                  "💬 " + (s.title || s.id.slice(0, 12)) + " — " + w.title)),
+              h("option", { value: "ws:" + w.path, key: w.workspaceId + "-ws" }, "📁 " + t("review.wholeWorkspace") + ": " + w.title),
+            ])),
           h("button", { className: "dsp2-btn primary", disabled: busy, onClick: start }, busy ? t("review.starting") : t("review.start"))),
         !reviews
           ? h("div", { className: "dsp2-empty" }, "…")

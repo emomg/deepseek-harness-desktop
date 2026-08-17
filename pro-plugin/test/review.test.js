@@ -30,7 +30,7 @@ function fakeGit(baseDir) {
     async isGitRepo() { return true; },
     async isEmptyRepo() { return false; },
     async headOf() { return "abc1234"; },
-    async changedFiles(dir) {
+    async changedFiles(dir, _base) {
       const base = await listFiles(baseDir);
       const cur = await listFiles(dir);
       const files = [];
@@ -42,13 +42,13 @@ function fakeGit(baseDir) {
       for (const rel of cur) if (!base.includes(rel)) files.push({ path: rel, status: "A" });
       return { ok: true, files };
     },
-    async fileDiff(_dir, file) {
+    async fileDiff(_dir, file, _base) {
       const a = await read(path.join(baseDir, file));
       const b = await read(path.join(_dir, file));
       return { ok: true, text: linesDiff(a, b, file, file) };
     },
     async stageFile(_dir, file) { staged.add(file); return { ok: true }; },
-    async discardFile(dir, file) {
+    async discardFile(dir, file, _base) {
       const base = path.join(baseDir, file);
       const cur = path.join(dir, file);
       if (await stat(base)) {
@@ -84,7 +84,7 @@ export async function run() {
     const deps = { logger: console, git: G };
     const rev = await review.startReview(deps, { workspacePath: repo });
     assert.equal(rev.baseline.type, "git");
-    assert.equal(rev.baseline.head, "abc1234");
+    assert.equal(rev.baseline.commit, "abc1234");
     assert.equal(rev.status, "open");
 
     // 制造改动
@@ -142,6 +142,25 @@ export async function run() {
     // 提交（复制基线标记完成）
     await review.commitReview({ logger: console }, rev2, "plain done");
     assert.equal(rev2.status, "committed");
+
+    // ---- 会话基线：capture + 按会话评审使用会话开始时的提交 ----
+    const G2 = fakeGit(base);
+    const deps2 = { logger: console, git: G2 };
+    const captured = await review.captureSessionBaseline(deps2, "sess-1", repo);
+    assert.ok(captured && captured.commit === "abc1234", "会话基线已捕获");
+    assert.equal((await review.sessionBaselineOf(deps2, "sess-1")).commit, "abc1234");
+    assert.equal(await review.sessionBaselineOf(deps2, "nope"), null);
+    // 按会话开始评审 → 用会话基线提交
+    const rev3 = await review.startReview(deps2, { workspacePath: repo, sessionId: "sess-1" });
+    assert.equal(rev3.baseline.type, "git");
+    assert.equal(rev3.baseline.commit, "abc1234");
+    assert.equal(rev3.baseline.sessionBaseline, true, "标记为会话基线");
+    await review.discardReview(deps2, rev3); // 关闭 rev3 释放工作区（无改动时用放弃而非提交）
+    // 会话与工作区不匹配时退化为当前 HEAD
+    const rev4 = await review.startReview(deps2, { workspacePath: repo, sessionId: "other-ws-sess" });
+    assert.equal(rev4.baseline.sessionBaseline, false, "不匹配 → 当前 HEAD");
+    // 非 git 工作区捕获返回 null
+    assert.equal(await review.captureSessionBaseline({ logger: console }, "sess-p", plain), null);
 
     return "review OK";
   } finally {

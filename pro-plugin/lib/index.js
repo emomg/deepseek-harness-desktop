@@ -115,6 +115,19 @@ export function apply(ctx) {
     return null;
   }
 
+  // ---- 会话基线：会话创建时捕获该会话开始时的 git 提交（按会话评审用） ----
+  ctx.on("session/created", (session) => {
+    try {
+      const sid = session?.sessionId ?? session?.id;
+      if (!sid) return;
+      const ws = workspaceOfSession(sid);
+      if (!ws) return;
+      review.captureSessionBaseline(deps, sid, ws.path).catch(() => {});
+    } catch {
+      /* ignore */
+    }
+  });
+
   // ---- 自动摘要：每轮任务收尾时触发（有新活动 + 节流通过才生成） ----
   ctx.on("agent/turn-stopping", (payload) => {
     try {
@@ -304,13 +317,18 @@ export function apply(ctx) {
         if (!methodOf(req, res, "POST")) return;
         try {
           const body = await readJsonBody(req);
-          if (typeof body.workspacePath !== "string" || !body.workspacePath) {
-            throw new Error("缺少 workspacePath");
+          let workspacePath = body.workspacePath;
+          let sessionId = typeof body.sessionId === "string" ? body.sessionId : null;
+          // 按会话评审：只传 sessionId 时自动解析其工作区
+          if ((typeof workspacePath !== "string" || !workspacePath) && sessionId) {
+            const ws = workspaceOfSession(sessionId);
+            if (!ws) throw new Error("会话不属于任何工作区，无法定位评审目录");
+            workspacePath = ws.path;
           }
-          const rev = await review.startReview(deps, {
-            workspacePath: body.workspacePath,
-            sessionId: typeof body.sessionId === "string" ? body.sessionId : null,
-          });
+          if (typeof workspacePath !== "string" || !workspacePath) {
+            throw new Error("缺少 workspacePath 或 sessionId");
+          }
+          const rev = await review.startReview(deps, { workspacePath, sessionId });
           writeJson(res, 200, { ok: true, review: rev });
         } catch (e) {
           writeJson(res, 400, { error: String(e?.message ?? e) });

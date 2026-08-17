@@ -38,9 +38,9 @@ export async function headOf(dir) {
   return r.ok ? r.out : null;
 }
 
-/** 工作区 vs HEAD 的变更文件清单：[{path, status}]，status ∈ M/A/D/R。 */
-export async function changedFiles(dir) {
-  const r = await runGit(["diff", "--name-status", "HEAD", "--"], dir, 30000);
+/** 工作区 vs 基线提交（默认 HEAD）的变更文件清单：[{path, status}]。 */
+export async function changedFiles(dir, base = "HEAD") {
+  const r = await runGit(["diff", "--name-status", base, "--"], dir, 30000);
   if (!r.ok) return { ok: false, error: r.error };
   const files = [];
   for (const line of r.out.split(/\r?\n/)) {
@@ -59,9 +59,9 @@ export async function changedFiles(dir) {
   return { ok: true, files };
 }
 
-/** 单个文件的工作区 vs HEAD 统一差异（截断输出，避免超大）。 */
-export async function fileDiff(dir, file, maxBytes = 60000) {
-  const r = await runGit(["diff", "HEAD", "--", file], dir, 30000);
+/** 单个文件的工作区 vs 基线提交（默认 HEAD）统一差异（截断输出，避免超大）。 */
+export async function fileDiff(dir, file, base = "HEAD", maxBytes = 60000) {
+  const r = await runGit(["diff", base, "--", file], dir, 30000);
   if (!r.ok) return { ok: false, error: r.error };
   let text = r.out;
   if (Buffer.byteLength(text, "utf8") > maxBytes) {
@@ -75,9 +75,9 @@ export async function stageFile(dir, file) {
   return runGit(["add", "--", file], dir, 30000);
 }
 
-/** 丢弃（拒绝）文件：恢复到 HEAD。 */
-export async function discardFile(dir, file) {
-  const r = await runGit(["checkout", "--", file], dir, 30000);
+/** 丢弃（拒绝）文件：恢复到基线提交（默认 HEAD）。 */
+export async function discardFile(dir, file, base = "HEAD") {
+  const r = await runGit(["checkout", base, "--", file], dir, 30000);
   if (!r.ok) {
     // 可能是新增文件（不在 HEAD 中）：直接删除
     const del = await runGit(["rm", "-f", "--", file], dir, 30000);
