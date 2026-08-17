@@ -324,7 +324,12 @@ export function apply(ctx) {
       handler: async (req, res) => {
         if (!methodOf(req, res, "GET")) return;
         try {
-          writeJson(res, 200, { ok: true, reviews: await review.listReviews(deps) });
+          const revs = await review.listReviews(deps);
+          // 补充会话标题（单列表/按工作区展示"会话内容"用）
+          for (const rev of revs) {
+            rev.sessionTitle = rev.sessionId ? sessionTitleOf(rev.sessionId) : null;
+          }
+          writeJson(res, 200, { ok: true, reviews: revs });
         } catch (e) {
           writeJson(res, 500, { error: String(e?.message ?? e) });
         }

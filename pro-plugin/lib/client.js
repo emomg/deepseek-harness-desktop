@@ -550,12 +550,26 @@ window.__ModuleLoader__.load({
 
       const workspaces = dash ?? [];
 
-      const reviewRow = (r) =>
-        h("div", { className: "dsp2-row", key: r.id },
+      const reviewRow = (r) => {
+        const files = Object.entries(r.files ?? {});
+        const accepted = files.filter(([, f]) => f.decision === "accepted").length;
+        const rejected = files.filter(([, f]) => f.decision === "rejected").length;
+        const pending = files.length - accepted - rejected;
+        const title = r.sessionTitle || (r.sessionId ? r.sessionId.slice(0, 12) : null);
+        return h("div", { className: "dsp2-row", key: r.id },
           h("div", { style: { flex: 1, minWidth: 0 } },
-            h("div", { className: "dsp2-rowName" }, r.workspacePath),
-            h("div", { className: "dsp2-rowDesc" }, fmtTime(r.createdAt) + " · " + t("review.status." + r.status) + " · " + Object.keys(r.files ?? {}).length + " files")),
+            h("div", { className: "dsp2-rowName" }, title ? "💬 " + title : "📁 " + r.workspacePath),
+            h("div", { className: "dsp2-rowDesc" },
+              (title ? r.workspacePath + " · " : "") +
+              fmtTime(r.createdAt) + " · " + t("review.status." + r.status) + " · " + files.length + " files" +
+              (accepted ? " · ✓" + accepted : "") + (rejected ? " · ✗" + rejected : "") + (pending ? " · ·" + pending : "")),
+            files.slice(0, 4).map(([p, f]) =>
+              h("div", { className: "dsp2-rowDesc", key: p, style: { fontFamily: "Cascadia Code,Consolas,monospace", fontSize: 11 } },
+                (f.status === "M" ? "M" : f.status === "A" ? "A" : "D") + " " + p +
+                (f.decision === "accepted" ? "  ✓" : f.decision === "rejected" ? "  ✗" : ""))),
+            files.length > 4 ? h("div", { className: "dsp2-rowDesc" }, "+" + (files.length - 4) + " files…") : null),
           IconBtn({ onClick: () => openReview(r.id) }, t("review.open")));
+      };
 
       if (detail) {
         const files = detail.files ?? [];
