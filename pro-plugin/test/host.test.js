@@ -75,7 +75,7 @@ export async function run() {
     await fs.writeFile(path.join(ws, "f.txt"), "v1\n", "utf8");
     res = fakeRes();
     await routes.get("/api/pro/review/start").handler(
-      fakeReq("POST", "/api/pro/review/start", { workspacePath: ws }), res);
+      fakeReq("POST", "/api/pro/review/start", { workspacePath: ws, sessionId: "s1" }), res);
     assert.equal(res.result().code, 200, "评审开始成功: " + JSON.stringify(res.result().body));
     const revId = res.result().body.review.id;
 
@@ -83,6 +83,13 @@ export async function run() {
     await routes.get("/api/pro/review").handler(fakeReq("GET", "/api/pro/review?id=" + revId), res);
     assert.equal(res.result().code, 200);
     assert.equal(res.result().body.review.status, "open");
+
+    // 评审列表应补充会话标题（单列表展示会话内容用）
+    res = fakeRes();
+    await routes.get("/api/pro/review/list").handler(fakeReq("GET", "/api/pro/review/list"), res);
+    assert.equal(res.result().code, 200);
+    const listed = res.result().body.reviews.find((rv) => rv.id === revId);
+    assert.equal(listed.sessionTitle, "会话A", "review list 携带 sessionTitle");
 
     // 修改文件后 diff 路由
     await fs.writeFile(path.join(ws, "f.txt"), "v2\n", "utf8");
