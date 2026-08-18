@@ -1,0 +1,17 @@
+{
+  "name": "@dsh-desktop/desktop",
+  "version": "2.0.0",
+  "private": true,
+  "description": "DeepSeek Harness 原生 Windows 桌面端（Tauri 2 + Rust），加载 http://127.0.0.1:3080 的 DSH Web UI。",
+  "type": "module",
+  "license": "MIT",
+  "scripts": {
+    "dev": "cd src-tauri && cargo run",
+    "build": "cd src-tauri && cargo build --release",
+    "build:debug": "cd src-tauri && cargo build",
+    "icons": "node tools/generate-icons.mjs"
+  },
+  "engines": {
+    "rustc": ">=1.75.0"
+  }
+}

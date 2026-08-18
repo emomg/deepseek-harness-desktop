@@ -1,8 +1,8 @@
 # ---- Rust / Cargo ----
-src-tauri/target/
-src-tauri/vendor/
-src-tauri/.cargo/
-src-tauri/gen/
+apps/desktop/src-tauri/target/
+apps/desktop/src-tauri/vendor/
+apps/desktop/src-tauri/.cargo/
+apps/desktop/src-tauri/gen/
 
 # ---- 二进制与构建产物（发布走 GitHub Releases）----
 *.exe
@@ -10,9 +10,20 @@ installer/build/
 installer/*-Setup-*.exe
 installer/nsis/
 installer/nsis-*.zip
+installer/*.zip
 
-# ---- Node ----
+# ---- Node / pnpm ----
 node_modules/
+.pnpm-store/
+**/node_modules/
+
+# ---- 聚合包自动生成产物（dsh-skins/build.mjs 输出）----
+dsh-skins/dist/
+dsh-skins/lib/
+
+# ---- 画廊自动生成产物（gallery/build.mjs 输出）----
+gallery/dist/
+gallery/build/
 
 # ---- DSH 用户数据：含聊天记录、API Key 等敏感信息，绝不入库 ----
 .dsh/

@@ -1,0 +1,41 @@
+{
+  "name": "@dsh-desktop/skin-center",
+  "version": "0.1.0",
+  "description": "dsh-desktop 皮肤中心 GUI 卡：从共享注册表读全部皮肤，渲染列表/试穿/应用/还原/微调。",
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./apply": "./lib/apply.js",
+    "./card": "./lib/card.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib",
+    "skin.json",
+    "cordis.patch.yml",
+    "README.md",
+    "README.zh.md"
+  ],
+  "license": "MIT",
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "inject": [
+        "@deepseek-ai/dsh-client-runtime"
+      ],
+      "platform": "web"
+    }
+  },
+  "peerDependencies": {
+    "@dsh-desktop/shared": "^0.1.0"
+  },
+  "dependencies": {
+    "@dsh-desktop/shared": "workspace:*"
+  },
+  "scripts": {
+    "test": "node tests/run-all.js"
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "name": "dsh-plugin-image-input",
+  "version": "0.1.0",
+  "description": "DeepSeek Harness 图片输入插件：composer 直接粘贴/拖拽图片，纯文本模型下自动桥接 OpenAI 兼容视觉 API 识图",
+  "keywords": [
+    "deepseek",
+    "harness",
+    "dsh",
+    "cordis",
+    "plugin",
+    "image",
+    "vision",
+    "paste",
+    "vlm"
+  ],
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./client": "./lib/client.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib",
+    "cordis.patch.yml",
+    "README.md"
+  ],
+  "license": "MIT",
+  "dsh": {
+    "client": {
+      "inject": [
+        "@deepseek-ai/dsh-client-runtime"
+      ],
+      "platform": "web"
+    },
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "*",
+    "react": "^18.2.0"
+  }
+}

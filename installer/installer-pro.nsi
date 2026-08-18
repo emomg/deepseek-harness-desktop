@@ -1,4 +1,4 @@
-; DeepSeek Harness Desktop - Windows °²×°½Å±¾ (NSIS 3)
+; DeepSeek Harness Desktop - Windows ï¿½ï¿½×°ï¿½Å±ï¿½ (NSIS 3)
 Unicode true
 !include "MUI2.nsh"
 !include "LogicLib.nsh"
@@ -22,13 +22,13 @@ InstallDir "${INST_DIR}"
 RequestExecutionLevel user
 VIProductVersion "1.0.0.0"
 VIAddVersionKey /LANG=2052 "ProductName" "DeepSeek Harness Desktop"
-VIAddVersionKey /LANG=2052 "FileDescription" "DeepSeek Harness ×ÀÃæ¿Í»§¶Ë°²×°³ÌÐò"
+VIAddVersionKey /LANG=2052 "FileDescription" "DeepSeek Harness ï¿½ï¿½ï¿½ï¿½Í»ï¿½ï¿½Ë°ï¿½×°ï¿½ï¿½ï¿½ï¿½"
 VIAddVersionKey /LANG=2052 "FileVersion" "1.0.0"
 VIAddVersionKey /LANG=2052 "ProductVersion" "1.0.0"
 VIAddVersionKey /LANG=2052 "LegalCopyright" "Copyright (c) 2026 DeepSeek (MIT)"
 
-!define MUI_ICON "..\src-tauri\icons\icon.ico"
-!define MUI_UNICON "..\src-tauri\icons\icon.ico"
+!define MUI_ICON "..\apps\desktop\src-tauri\icons\icon.ico"
+!define MUI_UNICON "..\apps\desktop\src-tauri\icons\icon.ico"
 !define MUI_ABORTWARNING
 
 !insertmacro MUI_PAGE_WELCOME
@@ -38,7 +38,7 @@ VIAddVersionKey /LANG=2052 "LegalCopyright" "Copyright (c) 2026 DeepSeek (MIT)"
 !insertmacro MUI_PAGE_DIRECTORY
 !insertmacro MUI_PAGE_INSTFILES
 !define MUI_FINISHPAGE_RUN "$INSTDIR\${APP_EXE}"
-!define MUI_FINISHPAGE_RUN_TEXT "Á¢¼´Æô¶¯ DeepSeek Harness"
+!define MUI_FINISHPAGE_RUN_TEXT "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ DeepSeek Harness"
 !insertmacro MUI_PAGE_FINISH
 
 !insertmacro MUI_UNPAGE_CONFIRM
@@ -47,24 +47,24 @@ VIAddVersionKey /LANG=2052 "LegalCopyright" "Copyright (c) 2026 DeepSeek (MIT)"
 !insertmacro MUI_LANGUAGE "SimpChinese"
 !insertmacro MUI_LANGUAGE "English"
 
-Section "Ö÷³ÌÐò" SecMain
+Section "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½" SecMain
   SectionIn RO
   SetOutPath "$INSTDIR"
   File "build\${APP_EXE}"
-  ; WebView2Loader.dll£¨GNU ¹¤¾ßÁ´¹¹½¨µÄ¶¯Ì¬ÒÀÀµ£¬±ØÐëÓë exe Í¬Ä¿Â¼£©
+  ; WebView2Loader.dllï¿½ï¿½GNU ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¶ï¿½Ì¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ exe Í¬Ä¿Â¼ï¿½ï¿½
   File "build\WebView2Loader.dll"
-  ; ÄÚÖÃ DSH ²å¼þ£¨pro-plugin / dsh-files / dsh-plugin-image-input£©¡£
-  ; -full °æ£ºplugins Ä¿Â¼º¬ node_modules£¨×°Íê¼´ÓÃ£©£»
-  ; ¾«¼ò°æ£ºÖ»ÓÐÔ´Âë£¬Ê×´ÎÆô¶¯×ÀÃæ¶Ë×Ô¶¯×¢²áºóÌáÊ¾ npm install¡£
+  ; ï¿½ï¿½ï¿½ï¿½ DSH ï¿½ï¿½ï¿½ï¿½ï¿½pro-plugin / dsh-files / dsh-plugin-image-inputï¿½ï¿½ï¿½ï¿½
+  ; -full ï¿½æ£ºplugins Ä¿Â¼ï¿½ï¿½ node_modulesï¿½ï¿½×°ï¿½ê¼´ï¿½Ã£ï¿½ï¿½ï¿½
+  ; ï¿½ï¿½ï¿½ï¿½æ£ºÖ»ï¿½ï¿½Ô´ï¿½ë£¬ï¿½×´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô¶ï¿½×¢ï¿½ï¿½ï¿½ï¿½ï¿½Ê¾ npm installï¿½ï¿½
   SetOutPath "$INSTDIR\plugins"
   File /r "build\plugins\*.*"
-  ; ×Ô°üº¬°²×°°ü£º°Ñ Node.js + dsh ÔËÐÐÊ±Ò»²¢×°Èë£¨makensis -DRUNTIME_DIR=... Ê±ÆôÓÃ£©
+  ; ï¿½Ô°ï¿½ï¿½ï¿½ï¿½ï¿½×°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Node.js + dsh ï¿½ï¿½ï¿½ï¿½Ê±Ò»ï¿½ï¿½×°ï¿½ë£¨makensis -DRUNTIME_DIR=... Ê±ï¿½ï¿½ï¿½Ã£ï¿½
   !ifdef RUNTIME_DIR
     SetOutPath "$INSTDIR\runtime"
     File /r "${RUNTIME_DIR}\*.*"
   !endif
   SetOutPath "$INSTDIR"
-  ; WebView2 Runtime ¼ì²é£ºÈ±Ê§ÔòÓÃÀ¦°óµÄÒýµ¼Æ÷¾²Ä¬°²×°
+  ; WebView2 Runtime ï¿½ï¿½é£ºÈ±Ê§ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¬ï¿½ï¿½×°
   File "build\MicrosoftEdgewebview2Setup.exe"
   ReadRegStr $0 HKLM "SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}" "pv"
   StrCmp $0 "" +2
@@ -72,19 +72,19 @@ Section "Ö÷³ÌÐò" SecMain
   ReadRegStr $0 HKLM "SOFTWARE\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}" "pv"
   StrCmp $0 "" +2
   Goto webview2_ok
-  DetailPrint "Î´¼ì²âµ½ WebView2 Runtime£¬ÕýÔÚ¾²Ä¬°²×°£¨Ô¼ 1 ·ÖÖÓ£©..."
+  DetailPrint "Î´ï¿½ï¿½âµ½ WebView2 Runtimeï¿½ï¿½ï¿½ï¿½ï¿½Ú¾ï¿½Ä¬ï¿½ï¿½×°ï¿½ï¿½Ô¼ 1 ï¿½ï¿½ï¿½Ó£ï¿½..."
   ExecWait '"$INSTDIR\MicrosoftEdgewebview2Setup.exe" /silent /install'
   Delete "$INSTDIR\MicrosoftEdgewebview2Setup.exe"
   ReadRegStr $0 HKLM "SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}" "pv"
   StrCmp $0 "" webview2_failed
   Goto webview2_ok
 webview2_failed:
-  MessageBox MB_ICONEXCLAMATION|MB_OK "Î´ÄÜ×Ô¶¯°²×° WebView2 Runtime£¬Ó¦ÓÃ¿ÉÄÜÎÞ·¨Æô¶¯¡£¿ÉÉÔºóÊÖ¶¯°²×°£ºhttps://developer.microsoft.com/microsoft-edge/webview2/"
+  MessageBox MB_ICONEXCLAMATION|MB_OK "Î´ï¿½ï¿½ï¿½Ô¶ï¿½ï¿½ï¿½×° WebView2 Runtimeï¿½ï¿½Ó¦ï¿½Ã¿ï¿½ï¿½ï¿½ï¿½Þ·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ôºï¿½ï¿½Ö¶ï¿½ï¿½ï¿½×°ï¿½ï¿½https://developer.microsoft.com/microsoft-edge/webview2/"
 webview2_ok:
   WriteUninstaller "$INSTDIR\Uninstall.exe"
   CreateDirectory "$SMPROGRAMS\DeepSeek Harness"
   CreateShortcut "$SMPROGRAMS\DeepSeek Harness\DeepSeek Harness.lnk" "$INSTDIR\${APP_EXE}"
-  CreateShortcut "$SMPROGRAMS\DeepSeek Harness\Ð¶ÔØ DeepSeek Harness.lnk" "$INSTDIR\Uninstall.exe"
+  CreateShortcut "$SMPROGRAMS\DeepSeek Harness\Ð¶ï¿½ï¿½ DeepSeek Harness.lnk" "$INSTDIR\Uninstall.exe"
   CreateShortcut "$DESKTOP\DeepSeek Harness.lnk" "$INSTDIR\${APP_EXE}"
   WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APP_ID}" "DisplayName" "${APP_NAME}"
   WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APP_ID}" "DisplayVersion" "${APP_VERSION}"
@@ -97,9 +97,9 @@ webview2_ok:
 SectionEnd
 
 !ifdef RUNTIME_DIR
-Section "½«ÄÚÖÃ Node.js Ìí¼Óµ½ PATH£¨¿ÉÑ¡£¬ÍÆ¼ö£©" SecNodePath
+Section "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Node.js ï¿½ï¿½ï¿½Óµï¿½ PATHï¿½ï¿½ï¿½ï¿½Ñ¡ï¿½ï¿½ï¿½Æ¼ï¿½ï¿½ï¿½" SecNodePath
   SectionIn 1
-  ; ÏµÍ³ÒÑÓÐ node ÔòÌø¹ý£¬±ÜÃâÓ°ÏìÓÃ»§ÒÑÓÐ»·¾³
+  ; ÏµÍ³ï¿½ï¿½ï¿½ï¿½ node ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó°ï¿½ï¿½ï¿½Ã»ï¿½ï¿½ï¿½ï¿½Ð»ï¿½ï¿½ï¿½
   nsExec::ExecToStack 'where node'
   Pop $0
   Pop $1
@@ -107,7 +107,7 @@ Section "½«ÄÚÖÃ Node.js Ìí¼Óµ½ PATH£¨¿ÉÑ¡£¬ÍÆ¼ö£©" SecNodePath
   ReadRegStr $2 HKCU "Environment" "Path"
   ${StrStr} $3 $2 "$INSTDIR\runtime"
   StrCmp $3 "" node_add
-  DetailPrint "ÓÃ»§ PATH ÒÑ°üº¬ÄÚÖÃ Node.js Ä¿Â¼"
+  DetailPrint "ï¿½Ã»ï¿½ PATH ï¿½Ñ°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Node.js Ä¿Â¼"
   Goto node_done
 node_add:
   StrCmp $2 "" node_path_new
@@ -117,17 +117,17 @@ node_path_new:
   StrCpy $2 "$INSTDIR\runtime"
 node_write:
   WriteRegExpandStr HKCU "Environment" "Path" "$2"
-  DetailPrint "ÒÑ½«ÄÚÖÃ Node.js Ä¿Â¼Ìí¼Óµ½ÓÃ»§ PATH£¨$INSTDIR\runtime£©"
+  DetailPrint "ï¿½Ñ½ï¿½ï¿½ï¿½ï¿½ï¿½ Node.js Ä¿Â¼ï¿½ï¿½ï¿½Óµï¿½ï¿½Ã»ï¿½ PATHï¿½ï¿½$INSTDIR\runtimeï¿½ï¿½"
   System::Call 'user32.dll::SendMessageTimeoutW(i 0xFFFF, i 0x001A, i 0, w "Environment", i 0x0002, i 5000, *i r0)'
   Goto node_done
 node_existing:
-  DetailPrint "¼ì²âµ½ÏµÍ³ÒÑÓÐ Node.js£¬Ìø¹ý PATH ÅäÖÃ£¨±ÜÃâ³åÍ»£©"
+  DetailPrint "ï¿½ï¿½âµ½ÏµÍ³ï¿½ï¿½ï¿½ï¿½ Node.jsï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ PATH ï¿½ï¿½ï¿½Ã£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í»ï¿½ï¿½"
 node_done:
 SectionEnd
 !endif
 
 Section "Uninstall"
-  ; ´ÓÓÃ»§ PATH ÖÐÒÆ³ýÄÚÖÃ Node.js Ä¿Â¼£¨½ö -full ×Ô°üº¬°æÌí¼Ó¹ý£©
+  ; ï¿½ï¿½ï¿½Ã»ï¿½ PATH ï¿½ï¿½ï¿½Æ³ï¿½ï¿½ï¿½ï¿½ï¿½ Node.js Ä¿Â¼ï¿½ï¿½ï¿½ï¿½ -full ï¿½Ô°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó¹ï¿½ï¿½ï¿½
   !ifdef RUNTIME_DIR
     ReadRegStr $1 HKCU "Environment" "Path"
     StrCmp $1 "" path_cleanup_done
@@ -145,7 +145,7 @@ Section "Uninstall"
   RMDir /r "$INSTDIR\plugins"
   RMDir "$INSTDIR"
   Delete "$SMPROGRAMS\DeepSeek Harness\DeepSeek Harness.lnk"
-  Delete "$SMPROGRAMS\DeepSeek Harness\Ð¶ÔØ DeepSeek Harness.lnk"
+  Delete "$SMPROGRAMS\DeepSeek Harness\Ð¶ï¿½ï¿½ DeepSeek Harness.lnk"
   RMDir "$SMPROGRAMS\DeepSeek Harness"
   Delete "$DESKTOP\DeepSeek Harness.lnk"
   DeleteRegKey HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APP_ID}"
