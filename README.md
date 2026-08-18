@@ -98,6 +98,26 @@ cargo build --release
 
 ### NSIS 打包
 
+前置：Rust 工具链（stable MSVC 或 GNU）+ NSIS 3（`makensis` 在 PATH）+ full 版
+还要本地 Node.js 运行时。
+
+```powershell
+# 一键打 3 个变体（精简 / full / pro）
+.\scripts\build-installer.ps1 -RuntimeDir D:\node-v20
+
+# 只打某一个
+.\scripts\build-installer.ps1 -Variant lite
+.\scripts\build-installer.ps1 -Variant pro
+
+# 已有 dsh-desktop.exe 时跳过 cargo
+.\scripts\build-installer.ps1 -Variant lite -SkipCargo
+
+# 清理 installer/build/ 后再打
+.\scripts\build-installer.ps1 -Clean
+```
+
+手工打（不推荐，build-installer.ps1 已经包含全部步骤）：
+
 ```powershell
 # 1. 准备 build/
 New-Item -ItemType Directory -Force installer\build
