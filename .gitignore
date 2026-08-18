@@ -45,3 +45,6 @@ Desktop.ini
 
 # ---- 临时备份（mavis / Move-Item 删除前的临时回收站）----
 .trash-backup/
+
+# ---- build-portable 产物（不重打包跑可重出）----
+dist/
