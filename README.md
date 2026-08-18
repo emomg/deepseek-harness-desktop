@@ -1,4 +1,4 @@
-# DeepSeek Harness Desktop（修改bug中，请不要下载安装包）
+# DeepSeek Harness Desktop
 
 Native Windows desktop client for [deepseek-ai/deepseek-harness](https://github.com/deepseek-ai/deepseek-harness)
 plus a monorepo of DSH cordis plugins and 6 original minimal editorial skins.
