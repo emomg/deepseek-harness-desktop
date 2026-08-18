@@ -45,10 +45,12 @@ dsh web（3080，dsh 进程）
 │   ├── 路由 /api/pro/*（同源 3080）：
 │   │   templates / template(fill·delete) / summaries(generate) / dashboard
 │   │   review(start·list·terminate·end)
+│   │   skills（技能目录 + 预设技能库）· mcp（MCP 服务器配置与状态）
 │   └── 订阅 agent/turn-stopping → 自动摘要（节流 + 有新活动才生成）
 └── @dsh-pro/core · 客户端插件（lib/client.js，手写 loader 格式，无构建）
     ├── 侧边栏底部「Pro 面板」（sidebar.footer.action）+ 覆盖层（shell.overlay）
     ├── /tpl 命令（commandUi popupSelect → 填变量 → 发送到当前会话）
+    ├── 设置页（settings.section）：个性化（黑鲸鱼主题）/ 技能 / MCP 管理
     └── 同源 fetch /api/pro/*，无跨域/无桥接
 ```
 

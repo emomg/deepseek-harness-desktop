@@ -37,7 +37,7 @@ window.__ModuleLoader__.load({
 
     let react = require("react");
     react = __toESM(react, 1);
-    const { useState, useEffect, useCallback, useSyncExternalStore, createElement: h } = react;
+    const { useState, useEffect, useRef, useCallback, useSyncExternalStore, createElement: h } = react;
 
     // ------------------------------------------------------------ 样式
     const CSS_ID = "dsh-pro-v2-css";
@@ -130,6 +130,18 @@ window.__ModuleLoader__.load({
 .dsp2-stateDot.pending,.dsp2-stateDot.loading{background:#5b8cff}
 .dsp2-serverName{font-family:"Cascadia Code",Consolas,monospace;font-size:13px;font-weight:600}
 .dsp2-mono{font-family:"Cascadia Code",Consolas,monospace;font-size:11px;color:var(--dsw-alias-label-tertiary,#adb2b8);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dsp2-skinGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:10px}
+.dsp2-skinCard{border:1px solid var(--dsw-alias-border-l1,rgba(255,255,255,.06));border-radius:12px;padding:10px;background:var(--dsw-alias-bg-layer-2,#2c2c2e);flex-direction:column;gap:6px;display:flex}
+.dsp2-skinCard.on{border-color:var(--dsw-alias-state-business-primary,#4176e6)}
+.dsp2-skinCard.trying{box-shadow:0 0 0 2px rgba(91,140,255,.55)}
+.dsp2-skinPrev{height:72px;border-radius:8px;overflow:hidden;position:relative;border:1px solid rgba(255,255,255,.06);flex:none}
+.dsp2-skinGlow{position:absolute;inset:0}
+.dsp2-skinWhale{position:absolute;right:8%;bottom:-8%;width:56%;height:56%;background:radial-gradient(circle at 50% 50%,rgba(18,22,30,.85) 0%,rgba(18,22,30,0) 72%);border-radius:50%}
+.dsp2-skinName{font-size:13px;font-weight:600}
+.dsp2-skinDesc{font-size:11px;color:var(--dsw-alias-label-tertiary,#adb2b8);line-height:1.5;min-height:2.6em}
+.dsp2-skinActions{display:flex;gap:6px;margin-top:auto}
+.dsp2-skinNotice{font-size:12px;color:var(--dsw-alias-state-business-primary,#9db9f2);padding:4px 0}
+.dsp2-skinBar{position:sticky;bottom:0;display:flex;align-items:center;gap:10px;padding:8px 10px;margin-top:6px;background:var(--dsw-alias-bg-layer-2,#2c2c2e);border:1px dashed var(--dsw-alias-border-l2,rgba(255,255,255,.12));border-radius:10px;font-size:12px;color:var(--dsw-alias-label-primary,#f9fafb)}
 `;
       document.head.appendChild(tag);
     }
@@ -233,9 +245,21 @@ window.__ModuleLoader__.load({
       "review.starting": "开始中…",
       "common.err": "出错",
       "settings.personalize": "个性化",
+      "settings.skins": "皮肤中心",
       "settings.skill": "技能",
       "settings.mcp": "MCP",
       "personalize.title": "个性化 · 黑鲸鱼主题",
+      "skins.hint": "11 款原创皮肤，都支持先试穿再应用：点「试穿」即时生效，离开本页或点「退出试穿」完全还原，满意再点「应用」一键保存。",
+      "skins.try": "试穿",
+      "skins.apply": "应用",
+      "skins.restore": "退出试穿",
+      "skins.current": "当前",
+      "skins.tryingTag": "试穿中",
+      "skins.trying": "正在试穿：",
+      "skins.applied": "已应用：",
+      "skins.restored": "已完全还原为应用前的样式",
+      "skins.tryingBar": "试穿中 —— 离开本页或点「退出试穿」即完全还原",
+      "skins.fineTune": "微调当前皮肤",
       "personalize.bgStyle": "背景样式",
       "personalize.bgWhale": "黑鲸鱼（默认）",
       "personalize.bgGradient": "液态渐变（无鲸鱼）",
@@ -315,9 +339,21 @@ window.__ModuleLoader__.load({
       "review.confirmEnd": "End closes this review (interrupting the task if still running). Continue?",
       "review.starting": "Starting…",
       "settings.personalize": "Personalize",
+      "settings.skins": "Skins",
       "settings.skill": "Skills",
       "settings.mcp": "MCP",
       "personalize.title": "Personalize · Whale theme",
+      "skins.hint": "11 original skins, all try-before-apply: Try applies instantly, leaving this page or Restore fully reverts, Apply saves with one click.",
+      "skins.try": "Try",
+      "skins.apply": "Apply",
+      "skins.restore": "Exit try-on",
+      "skins.current": "current",
+      "skins.tryingTag": "trying",
+      "skins.trying": "Trying: ",
+      "skins.applied": "Applied: ",
+      "skins.restored": "Fully restored to the previous style",
+      "skins.tryingBar": "Trying on — leaving this page or Exit try-on fully reverts",
+      "skins.fineTune": "Fine-tune current skin",
       "personalize.bgStyle": "Background style",
       "personalize.bgWhale": "Black whale (default)",
       "personalize.bgGradient": "Liquid gradient (no whale)",
@@ -757,6 +793,12 @@ window.__ModuleLoader__.load({
       html.setAttribute("data-whale-liquid", p.liquid === false ? "0" : "1");
       if (bg === "gradient") html.style.setProperty("--dsh-whale-img", "none");
       else html.style.removeProperty("--dsh-whale-img");
+      if (p.bodyBg) html.style.setProperty("--dsh-body-bg", p.bodyBg);
+      else html.style.removeProperty("--dsh-body-bg");
+      if (p.glow1) html.style.setProperty("--dsh-glow-1", p.glow1);
+      else html.style.removeProperty("--dsh-glow-1");
+      if (p.glow2) html.style.setProperty("--dsh-glow-2", p.glow2);
+      else html.style.removeProperty("--dsh-glow-2");
     }
     function loadPrefs() {
       try {
@@ -779,108 +821,175 @@ window.__ModuleLoader__.load({
       ]);
     }
 
-    function PersonalizeSection({ t }) {
-      const [prefs, setPrefs] = useState(() => {
-        const p = loadPrefs();
-        if (p.opacity == null || p.blur == null || p.glass == null) {
-          const cs = typeof getComputedStyle === "function" ? getComputedStyle(document.body) : null;
-          const cv = (name, d) => {
-            if (!cs) return d;
-            const v = cs.getPropertyValue(name);
-            return v ? parseFloat(v) : d;
-          };
-          if (p.opacity == null) p.opacity = Math.round(cv("--dsh-whale-opacity", 0.5) * 100) / 100;
-          if (p.blur == null) p.blur = Math.round(cv("--dsh-whale-blur", 22));
-          if (p.glass == null) p.glass = Math.round(cv("--dsh-whale-glass", 0.9) * 100) / 100;
-        }
-        return p;
+    // ------------------------------------------------------------ 皮肤中心（11 款原创皮肤：先试穿再应用）
+    const SKINS = [
+      { id: "black-whale", name: "黑鲸", desc: "官方默认：黑鲸鱼 + 液态磨砂玻璃", dark: true, vars: { enabled: true, bg: "whale", opacity: 0.55, blur: 22, glass: 0.82, liquid: true, bodyBg: "#070b14", glow1: "rgba(62,120,255,0.14)", glow2: "rgba(126,66,255,0.10)" } },
+      { id: "deep-space", name: "深空", desc: "深邃星空：黑鲸鱼 + 高磨砂", dark: true, vars: { enabled: true, bg: "whale", opacity: 0.72, blur: 26, glass: 0.72, liquid: true, bodyBg: "#05070d", glow1: "rgba(50,100,255,0.13)", glow2: "rgba(150,60,255,0.09)" } },
+      { id: "liquid-glass", name: "液态玻璃", desc: "纯净液态渐变，无鲸鱼", dark: true, vars: { enabled: true, bg: "gradient", opacity: 0.68, blur: 28, glass: 0.78, liquid: true, bodyBg: "#0a0e18", glow1: "rgba(80,170,255,0.20)", glow2: "rgba(120,80,255,0.16)" } },
+      { id: "aurora", name: "极光", desc: "极光绿紫渐变", dark: true, vars: { enabled: true, bg: "gradient", opacity: 0.7, blur: 26, glass: 0.74, liquid: true, bodyBg: "#06110d", glow1: "rgba(60,255,170,0.18)", glow2: "rgba(120,90,255,0.16)" } },
+      { id: "cyber", name: "赛博", desc: "霓虹蓝粉，未来感", dark: true, vars: { enabled: true, bg: "gradient", opacity: 0.75, blur: 20, glass: 0.72, liquid: true, bodyBg: "#0a0614", glow1: "rgba(0,200,255,0.20)", glow2: "rgba(255,40,180,0.18)" } },
+      { id: "midnight", name: "极夜", desc: "近黑极简，安静专注", dark: true, vars: { enabled: true, bg: "gradient", opacity: 0.42, blur: 30, glass: 0.66, liquid: false, bodyBg: "#030408", glow1: "rgba(40,80,200,0.10)", glow2: "rgba(80,40,160,0.06)" } },
+      { id: "jade", name: "墨玉", desc: "暗绿墨玉质感", dark: true, vars: { enabled: true, bg: "whale", opacity: 0.6, blur: 26, glass: 0.76, liquid: true, bodyBg: "#081210", glow1: "rgba(60,200,150,0.14)", glow2: "rgba(90,140,255,0.10)" } },
+      { id: "dawn", name: "晨曦", desc: "暖橙浅色，清爽明亮", dark: false, vars: { enabled: true, bg: "gradient", opacity: 0.5, blur: 24, glass: 0.86, liquid: true, bodyBg: "#f4ede3", glow1: "rgba(255,180,120,0.30)", glow2: "rgba(255,140,160,0.20)" } },
+      { id: "mint", name: "薄荷", desc: "浅绿薄荷，清新自然", dark: false, vars: { enabled: true, bg: "gradient", opacity: 0.5, blur: 22, glass: 0.88, liquid: true, bodyBg: "#eef4ef", glow1: "rgba(120,220,180,0.28)", glow2: "rgba(90,180,200,0.20)" } },
+      { id: "sakura", name: "樱花", desc: "粉樱浅色，温柔治愈", dark: false, vars: { enabled: true, bg: "gradient", opacity: 0.55, blur: 22, glass: 0.86, liquid: true, bodyBg: "#f8edf1", glow1: "rgba(255,160,190,0.30)", glow2: "rgba(200,150,255,0.18)" } },
+      { id: "pure-white", name: "纯白", desc: "极简纯白，无背景层", dark: false, vars: { enabled: false, bg: "gradient", opacity: 0.35, blur: 18, glass: 0.94, liquid: false, bodyBg: "#f5f6f8", glow1: "rgba(180,200,230,0.20)", glow2: "rgba(220,190,240,0.12)" } },
+    ];
+    const DEFAULT_SKIN_ID = "black-whale";
+
+    function skinPrefs(skin) {
+      return Object.assign({}, PREF_DEFAULTS, {
+        skin: skin.id,
+        enabled: skin.vars.enabled,
+        bg: skin.vars.bg,
+        opacity: skin.vars.opacity,
+        blur: skin.vars.blur,
+        glass: skin.vars.glass,
+        liquid: skin.vars.liquid,
+        bodyBg: skin.vars.bodyBg,
+        glow1: skin.vars.glow1,
+        glow2: skin.vars.glow2,
       });
-      const [saved, setSaved] = useState(false);
-      const update = (patch) => {
-        setSaved(false);
-        setPrefs((prev) => {
-          const next = Object.assign({}, prev, patch);
-          savePrefs(next);
-          return next;
-        });
-      };
-      const reset = () => {
-        try { localStorage.removeItem(PREF_KEY); } catch { /* ignore */ }
-        setPrefs(Object.assign({}, PREF_DEFAULTS));
-        applyPrefsToDom(Object.assign({}, PREF_DEFAULTS));
-        setSaved(true);
-      };
-      const pct = (v) => Math.round((v ?? 0.5) * 100) + "%";
-      const opacityVal = prefs.opacity != null ? prefs.opacity : 0.5;
-      const blurVal = prefs.blur != null ? prefs.blur : 22;
-      const glassVal = prefs.glass != null ? prefs.glass : 0.9;
-      return h("div", { className: "dsp2-setSection" }, [
-        h("div", { className: "dsp2-setCard" }, [
-          h("div", { className: "dsp2-setTitle" }, t("personalize.title")),
-          h("div", { className: "dsp2-rowHint", style: { marginBottom: 8 } }, t("personalize.enabledHint")),
-          Row({
-            label: t("personalize.bgStyle"),
-            control: h("select", {
-              className: "dsp2-select",
-              value: prefs.bg === "gradient" ? "gradient" : "whale",
-              onChange: (e) => update({ bg: e.target.value }),
-            }, [
-              h("option", { value: "whale" }, t("personalize.bgWhale")),
-              h("option", { value: "gradient" }, t("personalize.bgGradient")),
-            ]),
-          }),
-          Row({
-            label: t("personalize.enabled"),
-            control: h("input", {
-              type: "checkbox",
-              className: "dsp2-check",
-              checked: prefs.enabled !== false,
-              onChange: (e) => update({ enabled: e.target.checked }),
-            }),
-          }),
-          Row({
-            label: t("personalize.opacity"),
-            value: pct(opacityVal),
-            control: h("input", {
-              type: "range", className: "dsp2-range", min: 0, max: 1, step: 0.05,
-              value: opacityVal,
-              onChange: (e) => update({ opacity: Number(e.target.value) }),
-            }),
-          }),
-          Row({
-            label: t("personalize.blur"),
-            value: blurVal + "px",
-            control: h("input", {
-              type: "range", className: "dsp2-range", min: 0, max: 60, step: 2,
-              value: blurVal,
-              onChange: (e) => update({ blur: Number(e.target.value) }),
-            }),
-          }),
-          Row({
-            label: t("personalize.glass"),
-            value: pct(glassVal),
-            control: h("input", {
-              type: "range", className: "dsp2-range", min: 0.5, max: 1, step: 0.02,
-              value: glassVal,
-              onChange: (e) => update({ glass: Number(e.target.value) }),
-            }),
-          }),
-          Row({
-            label: t("personalize.liquid"),
-            control: h("input", {
-              type: "checkbox", className: "dsp2-check",
-              checked: prefs.liquid !== false,
-              onChange: (e) => update({ liquid: e.target.checked }),
-            }),
-          }),
-          h("div", { style: { display: "flex", gap: 8, alignItems: "center", marginTop: 10 } },
-            h("button", { className: "dsp2-btn sm", onClick: reset }, t("personalize.reset")),
-            saved ? h("span", { className: "dsp2-rowHint" }, t("personalize.resetDone")) : null),
-        ]),
-      ]);
+    }
+    function currentSkinId(prefs) {
+      return prefs.skin && SKINS.some((s) => s.id === prefs.skin) ? prefs.skin : DEFAULT_SKIN_ID;
     }
 
-    function SkillSection({ t }) {
+    function SkinCenterSection({ t }) {
+  // 试穿：进入本页前快照当前偏好；试穿即时生效；离开本页（卸载）或点「退出试穿」完全还原
+  const snapshotRef = useRef(null);
+  const [trying, setTrying] = useState(null);
+  const [appliedId, setAppliedId] = useState(() => currentSkinId(loadPrefs()));
+  const [notice, setNotice] = useState("");
+  const [saved, setSaved] = useState(false);
+  const [prefs, setPrefs] = useState(() => {
+    const p = loadPrefs();
+    if (p.opacity == null || p.blur == null || p.glass == null) {
+      const cs = typeof getComputedStyle === "function" ? getComputedStyle(document.body) : null;
+      const cv = (name, d) => (cs ? parseFloat(cs.getPropertyValue(name)) || d : d);
+      if (p.opacity == null) p.opacity = Math.round(cv("--dsh-whale-opacity", 0.5) * 100) / 100;
+      if (p.blur == null) p.blur = Math.round(cv("--dsh-whale-blur", 22));
+      if (p.glass == null) p.glass = Math.round(cv("--dsh-whale-glass", 0.9) * 100) / 100;
+    }
+    return p;
+  });
+  const applyDomAndState = (p) => { setPrefs(p); applyPrefsToDom(p); };
+  const tryOn = (skin) => {
+    if (snapshotRef.current === null) snapshotRef.current = loadPrefs();
+    applyDomAndState(skinPrefs(skin));
+    setTrying(skin.id);
+    setNotice(t("skins.trying") + "「" + skin.name + "」");
+  };
+  const restore = () => {
+    if (snapshotRef.current !== null) {
+      applyDomAndState(snapshotRef.current);
+      snapshotRef.current = null;
+    }
+    setTrying(null);
+    setNotice(t("skins.restored"));
+  };
+  const apply = (skin) => {
+    const p = skinPrefs(skin);
+    setPrefs(p);
+    savePrefs(p);
+    snapshotRef.current = null;
+    setTrying(null);
+    setAppliedId(skin.id);
+    setNotice(t("skins.applied") + "「" + skin.name + "」");
+  };
+  const fineTune = (patch) => {
+    setSaved(false);
+    setPrefs((prev) => {
+      const next = Object.assign({}, prev, patch);
+      savePrefs(next);
+      applyPrefsToDom(next);
+      return next;
+    });
+  };
+  const reset = () => {
+    try { localStorage.removeItem(PREF_KEY); } catch { /* ignore */ }
+    const p = Object.assign({}, PREF_DEFAULTS);
+    setPrefs(p);
+    applyPrefsToDom(p);
+    setAppliedId(DEFAULT_SKIN_ID);
+    setSaved(true);
+    setNotice(t("skins.restored"));
+  };
+  useEffect(() => () => restore(), []);
+  const pct = (v) => Math.round((v ?? 0.5) * 100) + "%";
+  const opacityVal = prefs.opacity != null ? prefs.opacity : 0.5;
+  const blurVal = prefs.blur != null ? prefs.blur : 22;
+  const glassVal = prefs.glass != null ? prefs.glass : 0.9;
+  return h("div", { className: "dsp2-setSection" }, [
+    h("div", { className: "dsp2-rowHint" }, t("skins.hint")),
+    notice ? h("div", { className: "dsp2-skinNotice" }, notice) : null,
+    h("div", { className: "dsp2-skinGrid" },
+      SKINS.map((s) => {
+        const isApplied = trying === null && appliedId === s.id;
+        const isTrying = trying === s.id;
+        return h("div", { className: "dsp2-skinCard" + (isApplied ? " on" : "") + (isTrying ? " trying" : ""), key: s.id }, [
+          h("div", { className: "dsp2-skinPrev", style: { background: s.vars.bodyBg } }, [
+            h("div", { className: "dsp2-skinGlow", style: { background: "radial-gradient(120% 90% at 88% -12%, " + s.vars.glow1 + ", transparent 60%), radial-gradient(100% 80% at -8% 112%, " + s.vars.glow2 + ", transparent 55%)" } }),
+            s.vars.bg === "whale" ? h("div", { className: "dsp2-skinWhale" }) : null,
+          ]),
+          h("div", { className: "dsp2-skinName" }, s.name + (isApplied ? " · " + t("skins.current") : "") + (isTrying ? " · " + t("skins.tryingTag") : "")),
+          h("div", { className: "dsp2-skinDesc" }, s.desc),
+          h("div", { className: "dsp2-skinActions" }, [
+            h("button", { className: "dsp2-btn sm", onClick: () => tryOn(s) }, t("skins.try")),
+            h("button", { className: "dsp2-btn sm primary", onClick: () => apply(s) }, t("skins.apply")),
+          ]),
+        ]);
+      })),
+    trying ? h("div", { className: "dsp2-skinBar" }, [
+      h("span", null, t("skins.tryingBar")),
+      h("button", { className: "dsp2-btn sm", onClick: restore }, t("skins.restore")),
+    ]) : null,
+    // ---- 微调当前皮肤（原「个性化」合并于此）----
+    h("div", { className: "dsp2-setCard", style: { marginTop: 14 } }, [
+      h("div", { className: "dsp2-setTitle" }, t("skins.fineTune")),
+      h("div", { className: "dsp2-rowHint", style: { marginBottom: 8 } }, t("personalize.enabledHint")),
+      Row({
+        label: t("personalize.bgStyle"),
+        control: h("select", {
+          className: "dsp2-select",
+          value: prefs.bg === "gradient" ? "gradient" : "whale",
+          onChange: (e) => fineTune({ bg: e.target.value }),
+        }, [
+          h("option", { value: "whale" }, t("personalize.bgWhale")),
+          h("option", { value: "gradient" }, t("personalize.bgGradient")),
+        ]),
+      }),
+      Row({
+        label: t("personalize.enabled"),
+        control: h("input", { type: "checkbox", className: "dsp2-check", checked: prefs.enabled !== false, onChange: (e) => fineTune({ enabled: e.target.checked }) }),
+      }),
+      Row({
+        label: t("personalize.opacity"),
+        value: pct(opacityVal),
+        control: h("input", { type: "range", className: "dsp2-range", min: 0, max: 1, step: 0.05, value: opacityVal, onChange: (e) => fineTune({ opacity: Number(e.target.value) }) }),
+      }),
+      Row({
+        label: t("personalize.blur"),
+        value: blurVal + "px",
+        control: h("input", { type: "range", className: "dsp2-range", min: 0, max: 60, step: 2, value: blurVal, onChange: (e) => fineTune({ blur: Number(e.target.value) }) }),
+      }),
+      Row({
+        label: t("personalize.glass"),
+        value: pct(glassVal),
+        control: h("input", { type: "range", className: "dsp2-range", min: 0.5, max: 1, step: 0.02, value: glassVal, onChange: (e) => fineTune({ glass: Number(e.target.value) }) }),
+      }),
+      Row({
+        label: t("personalize.liquid"),
+        control: h("input", { type: "checkbox", className: "dsp2-check", checked: prefs.liquid !== false, onChange: (e) => fineTune({ liquid: e.target.checked }) }),
+      }),
+      h("div", { style: { display: "flex", gap: 8, alignItems: "center", marginTop: 10 } },
+        h("button", { className: "dsp2-btn sm", onClick: reset }, t("personalize.reset")),
+        saved ? h("span", { className: "dsp2-rowHint" }, t("personalize.resetDone")) : null),
+    ]),
+  ]);
+}
+
+function SkillSection({ t }) {
       const [state, setState] = useState({ status: "loading" });
       const [gen, setGen] = useState(0);
       useEffect(() => {
@@ -1006,14 +1115,14 @@ window.__ModuleLoader__.load({
       ctx.slots.inject("shell.overlay", () =>
         ctx.slots.register({ name: "shell.overlay", id: "dsh-pro-panel" }, () => h(Panel, { t })));
 
-      // ---- 设置 → 左侧列表新增：个性化 / 技能 / MCP ----
+      // ---- 设置 → 左侧列表新增：皮肤中心 / 个性化 / 技能 / MCP ----
       ctx.slots.inject("settings.section", () => ctx.slots.register({
         name: "settings.section",
-        id: "personalize",
-        order: 12,
-        label: () => t("settings.personalize"),
+        id: "skins",
+        order: 9,
+        label: () => t("settings.skins"),
         locale: NS,
-      }, () => h(PersonalizeSection, { t })));
+      }, () => h(SkinCenterSection, { t })));
       ctx.slots.inject("settings.section", () => ctx.slots.register({
         name: "settings.section",
         id: "skill",
