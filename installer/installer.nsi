@@ -53,11 +53,13 @@ Section "主程序" SecMain
   File "build\${APP_EXE}"
   ; WebView2Loader.dll（GNU 工具链构建的动态依赖，必须与 exe 同目录）
   File "build\WebView2Loader.dll"
-  ; 内置 DSH 插件（dsh-files / dsh-plugin-image-input）。
+  ; 内置 DSH 插件（精简 / full 版只装 dsh-files + dsh-plugin-image-input；
+  ; 不含 pro-plugin —— pro-plugin 专属 installer-pro.nsi）。
   ; -full 版：plugins 目录含 node_modules（装完即用）；
   ; 精简版：只有源码，首次启动桌面端自动注册后提示 npm install。
   SetOutPath "$INSTDIR\plugins"
-  File /r "build\plugins\*.*"
+  File /r "build\plugins\dsh-files"
+  File /r "build\plugins\dsh-plugin-image-input"
   ; 自包含安装包：把 Node.js + dsh 运行时一并装入（makensis -DRUNTIME_DIR=... 时启用）
   !ifdef RUNTIME_DIR
     SetOutPath "$INSTDIR\runtime"

@@ -36,6 +36,19 @@ installer/                      NSIS 安装脚本
 | `@dsh-desktop/skin-center`      | 皮肤中心 GUI 卡（v2 新增，替代原 pro-plugin 内置皮肤中心） |
 | `@dsh-desktop/skin-<id>` × 6    | 6 款极简 editorial 原创皮肤（v2 新增）                     |
 
+## 安装包变体（哪个插件进哪个 installer）
+
+| 变体       | 命令                | 装入的插件                                  |
+| ---------- | ------------------- | ------------------------------------------- |
+| 精简版     | `Setup-2.0.0.exe`   | `dsh-files` + `dsh-plugin-image-input`      |
+| full 版    | `Setup-2.0.0-full.exe` | `dsh-files` + `dsh-plugin-image-input`    |
+| 专业版     | `Setup-2.0.0-pro.exe`  | `dsh-pro` + `dsh-files` + `dsh-plugin-image-input` |
+
+**`@dsh-pro/core` 专属于专业版**，精简/full 故意不带。pro-plugin 的功能（任务模板 /
+仪表盘 / 评审门禁）专业版用户才用得上；精简版和 full 版用户是 DSH 基础体验派，不需要
+pro 能力。`installer.nsi` 显式列举只装两个，pro 版 `installer-pro.nsi` 用 `*.*` 通配符
+3 个全装。
+
 ## 6 款极简 editorial 原创皮肤（v2 全新）
 
 | id            | name (zh) | name (en)  | accent  | mood                          |

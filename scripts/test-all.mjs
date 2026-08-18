@@ -20,6 +20,7 @@ const SUITES = [
   { name: 'dsh-plugin-image-input', file: 'plugins/dsh-plugin-image-input/test/run-all.js' },
   { name: 'skin-center + 6 skins', file: 'skins/skin-center/tests/run-all.js' },
   { name: 'dsh-skins',             file: 'dsh-skins/tests/run-all.js' },
+  { name: 'installer-variants',    file: 'scripts/installer-variants.test.mjs' },
 ];
 
 let totalFail = 0;
