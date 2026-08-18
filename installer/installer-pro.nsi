@@ -53,9 +53,9 @@ Section "������" SecMain
   File "build\${APP_EXE}"
   ; WebView2Loader.dll��GNU �����������Ķ�̬������������ exe ͬĿ¼��
   File "build\WebView2Loader.dll"
-  ; ���� DSH �����pro-plugin / dsh-files / dsh-plugin-image-input����
-  ; -full �棺plugins Ŀ¼�� node_modules��װ�꼴�ã���
-  ; ����棺ֻ��Դ�룬�״�����������Զ�ע�����ʾ npm install��
+  ; 专业版 3 个插件全装（dsh-pro + dsh-files + dsh-plugin-image-input）
+  ; lite/full 版只装 dsh-files + dsh-plugin-image-input（不含 dsh-pro）
+  ; -full 版：plugins 目录含 node_modules（装完即用）
   SetOutPath "$INSTDIR\plugins"
   File /r "build\plugins\*.*"
   ; �԰�����װ������ Node.js + dsh ����ʱһ��װ�루makensis -DRUNTIME_DIR=... ʱ���ã�
