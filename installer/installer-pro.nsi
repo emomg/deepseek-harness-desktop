@@ -1,4 +1,4 @@
-; DeepSeek Harness Desktop - Windows ��װ�ű� (NSIS 3)
+﻿; DeepSeek Harness Desktop - Windows ��װ�ű� (NSIS 3)
 Unicode true
 !include "MUI2.nsh"
 !include "LogicLib.nsh"
@@ -9,7 +9,7 @@ ${Using:StrFunc} UnStrRep
 
 !define APP_NAME "DeepSeek Harness Pro"
 !define APP_EXE "dsh-desktop.exe"
-!define APP_VERSION "1.0.0-pro"
+!define APP_VERSION "2.0.0-pro"
 !define APP_ID "com.deepseek-harness.desktop.pro"
 !define INST_DIR "$LOCALAPPDATA\Programs\DeepSeek Harness Pro"
 
@@ -20,11 +20,11 @@ Name "${APP_NAME}"
 OutFile "${SETUP_NAME}"
 InstallDir "${INST_DIR}"
 RequestExecutionLevel user
-VIProductVersion "1.0.0.0"
+VIProductVersion "2.0.0.0"
 VIAddVersionKey /LANG=2052 "ProductName" "DeepSeek Harness Desktop"
 VIAddVersionKey /LANG=2052 "FileDescription" "DeepSeek Harness ����ͻ��˰�װ����"
-VIAddVersionKey /LANG=2052 "FileVersion" "1.0.0"
-VIAddVersionKey /LANG=2052 "ProductVersion" "1.0.0"
+VIAddVersionKey /LANG=2052 "FileVersion" "2.0.0"
+VIAddVersionKey /LANG=2052 "ProductVersion" "2.0.0"
 VIAddVersionKey /LANG=2052 "LegalCopyright" "Copyright (c) 2026 DeepSeek (MIT)"
 
 !define MUI_ICON "..\apps\desktop\src-tauri\icons\icon.ico"

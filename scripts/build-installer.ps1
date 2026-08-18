@@ -1,4 +1,4 @@
-# dsh-desktop v2 一键打安装包脚本
+﻿# dsh-desktop v2 一键打安装包脚本
 # 跑法（在仓库根 + Windows + PowerShell 5.1+）:
 #   .\scripts\build-installer.ps1                          # 默认打 3 个变体（精简 / full / pro）
 #   .\scripts\build-installer.ps1 -Variant lite            # 只打精简版
@@ -70,7 +70,7 @@ if (Test-Path $Webview2Loader) {
 $Plugins = @(
   @{ Name = 'dsh-pro';                  Source = Join-Path $RepoRoot 'plugins\dsh-pro' },
   @{ Name = 'dsh-files';                Source = Join-Path $RepoRoot 'plugins\dsh-files' },
-  @{ Name = 'dsh-plugin-image-input';   Source = Join-Path $RepoRoot 'plugins\dsh-plugin-image-input' },
+  @{ Name = 'dsh-plugin-image-input';   Source = Join-Path $RepoRoot 'plugins\dsh-plugin-image-input' }
 )
 foreach ($p in $Plugins) {
   if (-not (Test-Path $p.Source)) {
@@ -98,9 +98,9 @@ if (-not (Get-Command makensis -ErrorAction SilentlyContinue)) {
 Write-Host "[5/5] NSIS 编译 ..." -ForegroundColor Cyan
 foreach ($v in $Variants) {
   $script = switch ($v) {
-    'lite' { 'installer\installer.nsi' }
-    'full' { 'installer\installer.nsi' }
-    'pro'  { 'installer\installer-pro.nsi' }
+    'lite' { 'installer.nsi' }
+    'full' { 'installer.nsi' }
+    'pro'  { 'installer-pro.nsi' }
   }
   $extra = @()
   $label = $v
@@ -108,13 +108,14 @@ foreach ($v in $Variants) {
     if (-not $RuntimeDir) {
       throw "打 full 版必须 -RuntimeDir <node-rts-path>，例：-RuntimeDir D:\node-v20"
     }
-    $extra += "/DRUNTIME_DIR=`"$RuntimeDir`""
+    $extra += "/DRUNTIME_DIR=$RuntimeDir"
     $label = 'full (with runtime)'
   }
-  Write-Host "  -> makensis $script $($extra -join ' ')" -ForegroundColor Cyan
+  Write-Host "  -> makensis $($extra -join ' ') $script" -ForegroundColor Cyan
   Push-Location $InstallerDir
   try {
-    & makensis $script @extra
+    # NSIS 选项（如 /D）必须在脚本名之前才生效
+    & makensis @extra $script
     if ($LASTEXITCODE -ne 0) { throw "NSIS 失败 ($script exit $LASTEXITCODE)" }
   } finally {
     Pop-Location

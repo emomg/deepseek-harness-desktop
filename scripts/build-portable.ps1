@@ -1,4 +1,4 @@
-# dsh-desktop v2 portable 打包（不需要 NSIS）
+﻿# dsh-desktop v2 portable 打包（不需要 NSIS）
 # 跑法：.\scripts\build-portable.ps1
 # 产物：dist\DeepSeek-Harness-Desktop-2.0.0-portable.zip
 # 含 dsh-desktop.exe + WebView2Loader.dll + 3 个插件。
