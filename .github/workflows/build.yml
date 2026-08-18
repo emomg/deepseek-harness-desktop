@@ -20,7 +20,7 @@ jobs:
           targets: x86_64-pc-windows-msvc
 
       - name: Build release
-        working-directory: src-tauri
+        working-directory: apps/desktop/src-tauri
         run: cargo build --release
 
       - name: "Stage built-in plugins (slim: sources only)"
@@ -28,8 +28,8 @@ jobs:
         run: |
           # 内置插件源码目录（正式版：dsh-files + dsh-plugin-image-input）
           New-Item -ItemType Directory -Force installer\build\plugins
-          Copy-Item dsh-files installer\build\plugins\dsh-files -Recurse -Force
-          Copy-Item dsh-plugin-image-input installer\build\plugins\dsh-plugin-image-input -Recurse -Force
+          Copy-Item plugins\dsh-files installer\build\plugins\dsh-files -Recurse -Force
+          Copy-Item plugins\dsh-plugin-image-input installer\build\plugins\dsh-plugin-image-input -Recurse -Force
           # 移除任何误入的 node_modules（精简版由桌面端首次启动提示 npm install）
           Get-ChildItem installer\build\plugins -Directory -Filter node_modules -Recurse | Remove-Item -Recurse -Force
 
@@ -37,7 +37,7 @@ jobs:
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force installer\build
-          Copy-Item src-tauri\target\release\dsh-desktop.exe installer\build\
+          Copy-Item apps\desktop\src-tauri\target\release\dsh-desktop.exe installer\build\
           # WebView2Loader.dll（GNU/动态链接构建必需）：来自 NuGet 官方包
           Invoke-WebRequest -Uri "https://www.nuget.org/api/v2/package/Microsoft.Web.WebView2/1.0.2903.40" -OutFile "$env:TEMP\wv2.zip"
           Expand-Archive "$env:TEMP\wv2.zip" -DestinationPath "$env:TEMP\wv2" -Force
