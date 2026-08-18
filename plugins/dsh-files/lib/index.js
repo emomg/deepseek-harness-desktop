@@ -656,23 +656,24 @@ function defineReadDocumentTool(ctx, config) {
         type: 'object',
         additionalProperties: false,
         properties: {
-          path: { type: 'string', required: true },
-          format: { type: 'string', required: true, enum: ['pdf', 'docx', 'xlsx', 'text'] },
-          offset: { type: 'integer', required: true },
+          path: { type: 'string' },
+          format: { type: 'string', enum: ['pdf', 'docx', 'xlsx', 'text'] },
+          offset: { type: 'integer' },
           lines: {
             type: 'array',
-            required: true,
             items: {
               type: 'object',
               additionalProperties: false,
               properties: {
-                number: { type: 'integer', required: true },
-                text: { type: 'string', required: true }
-              }
+                number: { type: 'integer' },
+                text: { type: 'string' }
+              },
+              required: ['number', 'text']
             }
           },
-          totalLines: { type: 'integer', required: true }
-        }
+          totalLines: { type: 'integer' }
+        },
+        required: ['path', 'format', 'offset', 'lines', 'totalLines']
       },
       render: (_args, value) => [
         {

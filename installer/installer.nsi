@@ -15,7 +15,7 @@ ${Using:StrFunc} UnStrRep
 
 Name "${APP_NAME}"
 !ifndef SETUP_NAME
-  !define SETUP_NAME "DeepSeek-Harness-Desktop-Setup-${APP_VERSION}.exe"
+  !define SETUP_NAME "Setup-${APP_VERSION}.exe"
 !endif
 OutFile "${SETUP_NAME}"
 InstallDir "${INST_DIR}"
@@ -53,6 +53,10 @@ Section "主程序" SecMain
   File "build\${APP_EXE}"
   ; WebView2Loader.dll（GNU 工具链构建的动态依赖，必须与 exe 同目录）
   File "build\WebView2Loader.dll"
+  ; 版本变体标记：桌面端更新检查按它选择对应安装包（lite / full / pro）
+  FileOpen $0 "$INSTDIR\edition.txt" w
+  FileWrite $0 "lite"
+  FileClose $0
   ; 内置 DSH 插件（精简 / full 版只装 dsh-files + dsh-plugin-image-input；
   ; 不含 pro-plugin —— pro-plugin 专属 installer-pro.nsi）。
   ; -full 版：plugins 目录含 node_modules（装完即用）；
@@ -62,24 +66,35 @@ Section "主程序" SecMain
   File /r "build\plugins\dsh-plugin-image-input"
   ; 自包含安装包：把 Node.js + dsh 运行时一并装入（makensis -DRUNTIME_DIR=... 时启用）
   !ifdef RUNTIME_DIR
+    SetOutPath "$INSTDIR"
+    ; full 版标记
+    FileOpen $0 "$INSTDIR\edition.txt" w
+    FileWrite $0 "full"
+    FileClose $0
     SetOutPath "$INSTDIR\runtime"
     File /r "${RUNTIME_DIR}\*.*"
   !endif
   SetOutPath "$INSTDIR"
-  ; WebView2 Runtime 检查：缺失则用捆绑的引导器静默安装
-  File "build\MicrosoftEdgewebview2Setup.exe"
+  ; WebView2 Runtime 检查：缺失则用捆绑的引导器静默安装（引导器缺失时跳过）
+  !if /FileExists "build\MicrosoftEdgewebview2Setup.exe"
+    File "build\MicrosoftEdgewebview2Setup.exe"
+  !endif
   ReadRegStr $0 HKLM "SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}" "pv"
   StrCmp $0 "" +2
   Goto webview2_ok
   ReadRegStr $0 HKLM "SOFTWARE\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}" "pv"
   StrCmp $0 "" +2
   Goto webview2_ok
-  DetailPrint "未检测到 WebView2 Runtime，正在静默安装（约 1 分钟）..."
-  ExecWait '"$INSTDIR\MicrosoftEdgewebview2Setup.exe" /silent /install'
-  Delete "$INSTDIR\MicrosoftEdgewebview2Setup.exe"
-  ReadRegStr $0 HKLM "SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}" "pv"
-  StrCmp $0 "" webview2_failed
-  Goto webview2_ok
+  !if /FileExists "build\MicrosoftEdgewebview2Setup.exe"
+    DetailPrint "未检测到 WebView2 Runtime，正在静默安装（约 1 分钟）..."
+    ExecWait '"$INSTDIR\MicrosoftEdgewebview2Setup.exe" /silent /install'
+    Delete "$INSTDIR\MicrosoftEdgewebview2Setup.exe"
+    ReadRegStr $0 HKLM "SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}" "pv"
+    StrCmp $0 "" webview2_failed
+    Goto webview2_ok
+  !else
+    Goto webview2_ok
+  !endif
 webview2_failed:
   MessageBox MB_ICONEXCLAMATION|MB_OK "未能自动安装 WebView2 Runtime，应用可能无法启动。可稍后手动安装：https://developer.microsoft.com/microsoft-edge/webview2/"
 webview2_ok:
@@ -141,6 +156,7 @@ Section "Uninstall"
   !endif
   Delete "$INSTDIR\${APP_EXE}"
   Delete "$INSTDIR\WebView2Loader.dll"
+  Delete "$INSTDIR\edition.txt"
   Delete "$INSTDIR\MicrosoftEdgewebview2Setup.exe"
   Delete "$INSTDIR\Uninstall.exe"
   RMDir /r "$INSTDIR\runtime"

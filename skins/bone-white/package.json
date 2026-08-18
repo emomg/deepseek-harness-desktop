@@ -1,6 +1,6 @@
 {
   "name": "@dsh-desktop/skin-bone-white",
-  "version": "0.1.0",
+  "version": "2.0.0",
   "description": "骨白 · 极简 editorial 皮肤：冷白底 + 大量负空间 + 一抹墨黑。",
   "type": "module",
   "main": "lib/index.js",
@@ -35,3 +35,4 @@
     "@dsh-desktop/shared": "workspace:*"
   }
 }
+

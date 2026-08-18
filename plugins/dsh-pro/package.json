@@ -1,7 +1,7 @@
 {
   "name": "@dsh-pro/core",
   "description": "DeepSeek Harness Pro v0.1.1：任务模板库 + 项目仪表盘 + 会话自动摘要 + 评审门禁（替换旧专业版 v0.1.0）",
-  "version": "0.1.1",
+  "version": "2.0.0",
   "type": "module",
   "main": "lib/index.js",
   "exports": {
@@ -34,3 +34,4 @@
     "test": "node test/run-all.js"
   }
 }
+

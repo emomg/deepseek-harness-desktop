@@ -47,13 +47,13 @@ pub(crate) fn pro_log(line: &str) {
 }
 
 /// 用捆绑/系统的 node 跑一小段 fetch 脚本，取 GitHub 最新 release 的 tag 和页面。
-/// 返回 (tag, html_url)；任何一步失败返回 None（网络不可用、node 缺失等，均静默）。
-fn fetch_latest_release(prefer_full: bool) -> Option<(String, String, Option<String>, Option<String>)> {
+/// 返回 (tag, html_url, asset_url, digest)；任何一步失败返回 None（网络不可用、node 缺失等，均静默）。
+/// edition: "lite" | "full" | "pro" —— 决定下载哪个安装包变体。
+fn fetch_latest_release(edition: &str) -> Option<(String, String, Option<String>, Option<String>)> {
     // 优先捆绑运行时里的 node（-full 版），其次 PATH/Program Files 里的 node。
     let node = bundled_runtime()
         .map(|(n, _)| n)
         .or_else(find_node)?;
-    let pick = if prefer_full { "full" } else { "slim" };
     let script = format!(
         r#"const r = await fetch('{api}', {{
   headers: {{ 'User-Agent': 'dsh-desktop-update-check', 'Accept': 'application/vnd.github+json' }}
@@ -62,19 +62,23 @@ if (!r.ok) process.exit(2);
 const j = await r.json();
 console.log(j.tag_name || '');
 console.log(j.html_url || '');
-const prefer = '{pick}';
+const edition = '{edition}';
 const all = (j.assets || []).filter(a => a.name && a.name.endsWith('.exe'));
 let asset;
-if (prefer === 'full') {{
+if (edition === 'pro') {{
+  asset = all.find(a => a.name.includes('-pro.exe')) || all.find(a => a.name.includes('-full.exe')) || all[0];
+}} else if (edition === 'full') {{
   asset = all.find(a => a.name.includes('-full.exe')) || all[0];
 }} else {{
-  asset = all.find(a => !a.name.includes('-full.exe')) || all[0];
+  // 精简版：只认不带 -full / -pro 后缀的裸 Setup-x.y.z.exe，避免被推荐成专业版安装包。
+  asset = all.find(a => !a.name.includes('-full') && !a.name.includes('-pro'))
+    || all.find(a => a.name.endsWith('.exe'));
 }}
 console.log(asset ? (asset.browser_download_url || '') : '');
 console.log(asset ? (asset.digest || '') : '');
 "#,
         api = UPDATE_API_URL,
-        pick = pick
+        edition = edition
     );
     let out = Command::new(&node).args(["-e", &script]).output().ok()?;
     eprintln!("[dsh-desktop] checking updates for {}", update_repo_label());
@@ -158,6 +162,20 @@ fn run_installer(path: &Path) -> bool {
     }
 }
 
+/// 当前安装的版本变体：读取 exe 同目录 edition.txt（lite / full / pro）。
+/// 缺失或内容非法时返回 None，调用方按旧逻辑回退。
+fn current_edition() -> Option<String> {
+    let exe = std::env::current_exe().ok()?;
+    let dir = exe.parent()?;
+    let text = std::fs::read_to_string(dir.join("edition.txt")).ok()?;
+    let edition = text.trim().to_ascii_lowercase();
+    if ["lite", "full", "pro"].contains(&edition.as_str()) {
+        Some(edition)
+    } else {
+        None
+    }
+}
+
 /// 查找已安装桌面版 exe（AppData 安装目录）。
 fn installed_exe() -> Option<PathBuf> {
     let local = std::env::var_os("LOCALAPPDATA")?;
@@ -218,8 +236,16 @@ fn confirm_update_dialog(title: &str, message: &str) -> bool {
 fn run_update_check(app: tauri::AppHandle) {
     let current = APP_VERSION.to_string();
     // 当前是 -full 自包含版（exe 同级有 runtime）则更新 full 安装包，否则更新精简版。
-    let prefer_full = bundled_runtime().is_some();
-    match fetch_latest_release(prefer_full) {
+    // 当前安装的版本变体：安装包在 exe 同级写 edition.txt（lite / full / pro）。
+    // 读不到时按旧逻辑推断：有捆绑运行时视为 full，否则 lite。
+    let edition = current_edition().unwrap_or_else(|| {
+        if bundled_runtime().is_some() {
+            "full".to_string()
+        } else {
+            "lite".to_string()
+        }
+    });
+    match fetch_latest_release(&edition) {
         None => {
             show_update_dialog(
                 "检查更新",

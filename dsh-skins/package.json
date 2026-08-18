@@ -1,6 +1,6 @@
 {
   "name": "@dsh-desktop/skins-all",
-  "version": "0.1.0",
+  "version": "2.0.0",
   "private": true,
   "description": "dsh-desktop 6 款原创皮肤的聚合 meta-package。一次安装，全部启用。",
   "type": "module",
@@ -30,3 +30,4 @@
     "@dsh-desktop/skin-mint": "workspace:*"
   }
 }
+

@@ -1,4 +1,4 @@
-﻿# dsh-desktop v2 一键打安装包脚本
+# dsh-desktop v2 一键打安装包脚本
 # 跑法（在仓库根 + Windows + PowerShell 5.1+）:
 #   .\scripts\build-installer.ps1                          # 默认打 3 个变体（精简 / full / pro）
 #   .\scripts\build-installer.ps1 -Variant lite            # 只打精简版
@@ -19,7 +19,8 @@ param(
   [string]$Variant = 'all',
   [switch]$SkipCargo,
   [switch]$Clean,
-  [string]$RuntimeDir = ''
+  [string]$RuntimeDir = '',
+  [string]$WebView2SetupPath = ''
 )
 
 $ErrorActionPreference = 'Stop'
@@ -66,6 +67,16 @@ $Webview2Loader = Join-Path $DesktopTauri 'target\release\WebView2Loader.dll'
 if (Test-Path $Webview2Loader) {
   Copy-Item $Webview2Loader (Join-Path $BuildDir 'WebView2Loader.dll') -Force
 }
+# WebView2 引导器（可选：缺失时 NSIS 自动跳过内嵌检测安装）
+$Webview2Setup = Join-Path $BuildDir 'MicrosoftEdgewebview2Setup.exe'
+if (-not (Test-Path $Webview2Setup) -and $WebView2SetupPath -and (Test-Path $WebView2SetupPath)) {
+  Copy-Item $WebView2SetupPath $Webview2Setup -Force
+}
+if (Test-Path $Webview2Setup) {
+  Write-Host "  + WebView2 bootstrapper ($([math]::Round((Get-Item $Webview2Setup).Length / 1MB, 1)) MB)"
+} else {
+  Write-Host "  ! 未找到 MicrosoftEdgewebview2Setup.exe（可用 -WebView2Setup <path> 指定）；安装包将跳过 WebView2 自动安装" -ForegroundColor Yellow
+}
 # 拷贝三个插件（v2 monorepo 路径）
 $Plugins = @(
   @{ Name = 'dsh-pro';                  Source = Join-Path $RepoRoot 'plugins\dsh-pro' },
@@ -109,6 +120,7 @@ foreach ($v in $Variants) {
       throw "打 full 版必须 -RuntimeDir <node-rts-path>，例：-RuntimeDir D:\node-v20"
     }
     $extra += "/DRUNTIME_DIR=$RuntimeDir"
+    $extra += '/DSETUP_NAME=Setup-2.0.0-full.exe'
     $label = 'full (with runtime)'
   }
   Write-Host "  -> makensis $($extra -join ' ') $script" -ForegroundColor Cyan

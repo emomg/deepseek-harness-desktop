@@ -1,6 +1,6 @@
 {
   "name": "dsh-files",
-  "version": "0.1.0",
+  "version": "2.0.0",
   "description": "DeepSeek Harness 回形针文件上传插件：composer 回形针按钮 + 拖拽上传 PDF/Word/Excel/TXT，按会话隔离存储，read_document 工具让 agent 直接读文档",
   "keywords": [
     "deepseek",
@@ -44,8 +44,12 @@
     "pdfjs-dist": "^4.10.38",
     "read-excel-file": "^5.8.7"
   },
+  "devDependencies": {
+    "jszip": "^3.10.1"
+  },
   "peerDependencies": {
     "@deepseek-ai/cordis": "*",
     "react": "^18.2.0"
   }
 }
+

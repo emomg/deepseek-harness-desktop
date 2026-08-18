@@ -1,6 +1,6 @@
 {
   "name": "@dsh-desktop/skin-center",
-  "version": "0.1.0",
+  "version": "2.0.0",
   "description": "dsh-desktop 皮肤中心 GUI 卡：从共享注册表读全部皮肤，渲染列表/试穿/应用/还原/微调。",
   "type": "module",
   "main": "lib/index.js",
@@ -34,3 +34,4 @@
     "test": "node tests/run-all.js"
   }
 }
+

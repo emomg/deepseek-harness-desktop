@@ -1,6 +1,6 @@
 [package]
 name = "dsh-desktop"
-version = "1.0.0"
+version = "2.0.0"
 description = "DSH Desktop - native desktop client for DeepSeek Harness"
 edition = "2021"
 
@@ -24,3 +24,4 @@ windows-sys = { version = "0.61", features = ["Win32_Foundation", "Win32_UI_Wind
 strip = true
 lto = true
 codegen-units = 1
+

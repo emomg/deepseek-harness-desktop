@@ -1,6 +1,6 @@
 {
   "name": "@dsh-desktop/skin-paper",
-  "version": "0.1.0",
+  "version": "2.0.0",
   "description": "宣纸 · 极简 editorial 皮肤：米白 + 朱砂一抹（暖底冷顶）。",
   "type": "module",
   "main": "lib/index.js",
@@ -35,3 +35,4 @@
     "@dsh-desktop/shared": "workspace:*"
   }
 }
+

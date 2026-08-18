@@ -15,6 +15,7 @@ installer/*.zip
 # ---- Node / pnpm ----
 node_modules/
 .pnpm-store/
+.pnpm-home/
 **/node_modules/
 
 # ---- 聚合包自动生成产物（dsh-skins/build.mjs 输出）----

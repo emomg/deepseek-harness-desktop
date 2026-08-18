@@ -41,7 +41,7 @@ window.__ModuleLoader__.load({
     // 同一 bundle 内可访问共享注册表。
     var shared = require('@dsh-desktop/shared');
     shared = __toESM(shared, 1);
-    const { list: listSkins, get: getSkin } = shared;
+    const { list: listSkins, get: getSkin, skinCss } = shared;
 
     // ---- apply layer ----
     // 浏览器端 apply：写 CSS 变量 + body data attr。
@@ -89,12 +89,34 @@ window.__ModuleLoader__.load({
       appliedId: /** @type {string|null} */ (null),
       snapshot: /** @type {{vars: any, skinId: string|null} | null} */ (null),
       extraStyleId: /** @type {string|null} */ (null),
+      dswStyleId: /** @type {string|null} */ (null),
     };
+
+    // DSH Web UI 官方 --dsw-* 令牌覆写样式（皮肤真正作用于真实界面）。
+    // 注入位置在 head 末尾，晚于官方 design-platform.css，同特异性后者胜出；
+    // 同时覆盖 body[data-ds-dark-theme]，让 light 皮肤在系统深色偏好下也生效。
+    function writeDswStyle(skin) {
+      if (typeof document === 'undefined') return;
+      if (state.dswStyleId) {
+        const old = document.getElementById(state.dswStyleId);
+        if (old) old.remove();
+        state.dswStyleId = null;
+      }
+      if (!skin || !skin.vars) return;
+      const { css } = skinCss(skin);
+      state.dswStyleId = 'dsh-desktop-dsw-' + skin.id;
+      const tag = document.createElement('style');
+      tag.id = state.dswStyleId;
+      tag.dataset.skin = skin.id;
+      tag.textContent = css;
+      document.head.appendChild(tag);
+    }
 
     function applySkin(skin) {
       if (!skin || !skin.vars) return false;
       writeVars({ ...DEFAULT_VARS, ...skin.vars });
       if (typeof document !== 'undefined') document.documentElement.dataset.dshSkin = skin.id;
+      writeDswStyle(skin);
       // inject extra css
       if (typeof document !== 'undefined') {
         if (state.extraStyleId) {
@@ -136,6 +158,11 @@ window.__ModuleLoader__.load({
           const old = document.getElementById(state.extraStyleId);
           if (old) old.remove();
           state.extraStyleId = null;
+        }
+        if (state.dswStyleId) {
+          const old = document.getElementById(state.dswStyleId);
+          if (old) old.remove();
+          state.dswStyleId = null;
         }
         state.appliedId = state.snapshot.skinId;
         state.snapshot = null;

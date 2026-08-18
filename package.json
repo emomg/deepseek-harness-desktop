@@ -1,6 +1,6 @@
 {
   "name": "deepseek-harness-desktop",
-  "version": "2.0.0-monorepo",
+  "version": "2.0.0",
   "private": true,
   "description": "Native Windows desktop client for deepseek-ai/deepseek-harness (Tauri 2 + Rust) + dsh cordis 插件全家桶（pro / files / image-input）+ dsh 极简 editorial 皮肤中心（6 款原创皮肤）",
   "type": "module",
@@ -35,3 +35,4 @@
     ]
   }
 }
+

@@ -1,6 +1,6 @@
 {
   "name": "@dsh-desktop/shared",
-  "version": "0.1.0",
+  "version": "2.0.0",
   "private": true,
   "description": "dsh-desktop 共享层：皮肤 token schema、CSS 变量约定、注册表 API。",
   "type": "module",
@@ -19,3 +19,4 @@
   ],
   "license": "MIT"
 }
+

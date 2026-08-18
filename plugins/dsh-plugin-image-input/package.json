@@ -1,6 +1,6 @@
 {
   "name": "dsh-plugin-image-input",
-  "version": "0.1.0",
+  "version": "2.0.0",
   "description": "DeepSeek Harness 图片输入插件：composer 直接粘贴/拖拽图片，纯文本模型下自动桥接 OpenAI 兼容视觉 API 识图",
   "keywords": [
     "deepseek",
@@ -42,3 +42,4 @@
     "react": "^18.2.0"
   }
 }
+

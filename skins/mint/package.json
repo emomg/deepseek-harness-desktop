@@ -1,6 +1,6 @@
 {
   "name": "@dsh-desktop/skin-mint",
-  "version": "0.1.0",
+  "version": "2.0.0",
   "description": "薄荷 · 极简 editorial 皮肤：米白 + 极低饱和薄荷。",
   "type": "module",
   "main": "lib/index.js",
@@ -35,3 +35,4 @@
     "@dsh-desktop/shared": "workspace:*"
   }
 }
+

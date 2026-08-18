@@ -16,3 +16,8 @@ export {
   get,
   _clearForTests,
 } from './registry.js';
+
+export {
+  skinStylesheet,
+  skinCss,
+} from './dsw-map.js';
