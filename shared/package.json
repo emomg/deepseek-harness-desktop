@@ -1,0 +1,21 @@
+{
+  "name": "@dsh-desktop/shared",
+  "version": "0.1.0",
+  "private": true,
+  "description": "dsh-desktop 共享层：皮肤 token schema、CSS 变量约定、注册表 API。",
+  "type": "module",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js",
+    "./skin-schema": "./skin-schema.js",
+    "./css-tokens": "./css-tokens.js",
+    "./registry": "./registry.js"
+  },
+  "files": [
+    "index.js",
+    "skin-schema.js",
+    "css-tokens.js",
+    "registry.js"
+  ],
+  "license": "MIT"
+}

@@ -1,0 +1,9 @@
+# @dsh-desktop/skin-center: 皮肤中心 GUI 卡
+# 设置页左侧「皮肤中心」tab；列表/试穿/应用/还原/微调全在这里。
+
+- insert:
+    - id: dsh-desktop-skin-center
+      name: '@dsh-desktop/skin-center'
+      config:
+        defaultSkin: 'bone-white'
+        persistKey: 'dsh-desktop.skin.v1'

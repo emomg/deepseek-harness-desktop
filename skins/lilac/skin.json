@@ -1,0 +1,35 @@
+{
+  "id": "lilac",
+  "name": "丁香",
+  "nameEn": "Lilac",
+  "tagline": "冷白 + 一抹极低饱和丁香紫",
+  "description": "冷白底配一抹极低饱和丁香紫。安静中的一点冷色，绝不抢戏。",
+  "tags": [
+    "light",
+    "minimal",
+    "editorial",
+    "cool",
+    "accent"
+  ],
+  "order": 5,
+  "vars": {
+    "--dsh-bg-primary": "#f7f5f8",
+    "--dsh-bg-secondary": "#ece8ef",
+    "--dsh-bg-elevated": "#fdfcfe",
+    "--dsh-fg-primary": "#1c1820",
+    "--dsh-fg-secondary": "#4a4350",
+    "--dsh-fg-tertiary": "#857d8c",
+    "--dsh-fg-disabled": "#b3acb8",
+    "--dsh-border": "rgba(28, 24, 32, 0.07)",
+    "--dsh-border-strong": "rgba(28, 24, 32, 0.14)",
+    "--dsh-accent": "#7a6592",
+    "--dsh-accent-fg": "#ffffff",
+    "--dsh-glass-bg": "rgba(247, 245, 248, 0.80)",
+    "--dsh-glass-border": "rgba(28, 24, 32, 0.07)",
+    "--dsh-glass-blur": 22,
+    "--dsh-shadow": "0 1px 2px rgba(28,24,32,.04), 0 8px 24px rgba(28,24,32,.04)",
+    "--dsh-glow-1": "rgba(122, 101, 146, 0.06)",
+    "--dsh-glow-2": "rgba(122, 101, 146, 0.03)",
+    "--dsh-mode": "light"
+  }
+}

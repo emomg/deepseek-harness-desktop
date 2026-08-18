@@ -1,0 +1,36 @@
+# 双语配对（CI 门禁 docs:check 会校验此文件与 README.md / README.zh.md 互相对应）
+namespace: '@dsh-desktop/skin-center'
+entries:
+  - id: settings.skins
+    zh: 皮肤中心
+    en: Skins
+  - id: skins.empty
+    zh: 皮肤中心已启用，但当前未注册任何皮肤。安装任一 @dsh-desktop/skin-* 包后刷新即可在此选择。
+    en: Skin center is enabled, but no skins are registered. Install any @dsh-desktop/skin-* package and reload to choose here.
+  - id: skins.hint
+    zh: 6 款极简 editorial 原创皮肤，支持先试穿再应用...
+    en: 6 original minimal editorial skins, all try-before-apply...
+  - id: skins.try
+    zh: 试穿
+    en: Try
+  - id: skins.apply
+    zh: 应用
+    en: Apply
+  - id: skins.restore
+    zh: 退出试穿
+    en: Exit try-on
+  - id: skins.current
+    zh: 当前
+    en: current
+  - id: skins.trying
+    zh: 试穿中
+    en: trying
+  - id: skins.applied
+    zh: 已应用
+    en: Applied
+  - id: skins.restored
+    zh: 已完全还原为应用前的样式
+    en: Fully restored to the previous style
+  - id: skins.tryingBar
+    zh: 试穿中 —— 离开本页或点「退出试穿」即完全还原
+    en: Trying on - leaving this page or Exit try-on fully reverts

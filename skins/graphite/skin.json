@@ -1,0 +1,34 @@
+{
+  "id": "graphite",
+  "name": "石墨",
+  "nameEn": "Graphite",
+  "tagline": "极简灰阶 + 一抹墨黑 + 高对比",
+  "description": "更深的冷灰底 + 强对比。编辑工作、文字密集、想集中注意力时的默认。",
+  "tags": [
+    "light",
+    "minimal",
+    "editorial",
+    "focus"
+  ],
+  "order": 2,
+  "vars": {
+    "--dsh-bg-primary": "#ececeb",
+    "--dsh-bg-secondary": "#dededd",
+    "--dsh-bg-elevated": "#f4f4f3",
+    "--dsh-fg-primary": "#0e0e0e",
+    "--dsh-fg-secondary": "#3a3a3a",
+    "--dsh-fg-tertiary": "#6e6e6e",
+    "--dsh-fg-disabled": "#a4a4a4",
+    "--dsh-border": "rgba(0, 0, 0, 0.10)",
+    "--dsh-border-strong": "rgba(0, 0, 0, 0.18)",
+    "--dsh-accent": "#0e0e0e",
+    "--dsh-accent-fg": "#ffffff",
+    "--dsh-glass-bg": "rgba(236, 236, 235, 0.82)",
+    "--dsh-glass-border": "rgba(0, 0, 0, 0.10)",
+    "--dsh-glass-blur": 24,
+    "--dsh-shadow": "0 1px 2px rgba(0,0,0,.06), 0 8px 28px rgba(0,0,0,.06)",
+    "--dsh-glow-1": "rgba(0, 0, 0, 0.04)",
+    "--dsh-glow-2": "rgba(0, 0, 0, 0.02)",
+    "--dsh-mode": "light"
+  }
+}

@@ -1,0 +1,18 @@
+packages:
+  - 'apps/*'
+  - 'plugins/*'
+  - 'skins/*'
+  - 'shared'
+  - 'dsh-skins'
+
+# SDK peers 不自动安装，运行时由 DSH profile 树解析。
+autoInstallPeers: false
+
+# 仓库级命令
+# pnpm install            # 装依赖
+# pnpm -r build           # 全仓构建
+# pnpm -r test            # 全仓单测
+# pnpm aggregate:check    # 聚合包一致性 (CI 门禁)
+# pnpm skin-center:check  # 皮肤中心注册表一致性 (CI 门禁)
+# pnpm gallery:check      # 画廊产物一致性 (CI 门禁)
+# pnpm docs:check         # 文档一致性 (CI 门禁)

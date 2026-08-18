@@ -27,8 +27,8 @@ VIAddVersionKey /LANG=2052 "FileVersion" "1.0.0"
 VIAddVersionKey /LANG=2052 "ProductVersion" "1.0.0"
 VIAddVersionKey /LANG=2052 "LegalCopyright" "Copyright (c) 2026 DeepSeek (MIT)"
 
-!define MUI_ICON "..\src-tauri\icons\icon.ico"
-!define MUI_UNICON "..\src-tauri\icons\icon.ico"
+!define MUI_ICON "..\apps\desktop\src-tauri\icons\icon.ico"
+!define MUI_UNICON "..\apps\desktop\src-tauri\icons\icon.ico"
 !define MUI_ABORTWARNING
 
 !insertmacro MUI_PAGE_WELCOME

@@ -1,0 +1,37 @@
+{
+  "name": "deepseek-harness-desktop",
+  "version": "2.0.0-monorepo",
+  "private": true,
+  "description": "Native Windows desktop client for deepseek-ai/deepseek-harness (Tauri 2 + Rust) + dsh cordis 插件全家桶（pro / files / image-input）+ dsh 极简 editorial 皮肤中心（6 款原创皮肤）",
+  "type": "module",
+  "license": "MIT",
+  "packageManager": "pnpm@10.9.0",
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=10.0.0"
+  },
+  "scripts": {
+    "build": "pnpm -r build",
+    "test": "node scripts/test-all.mjs",
+    "typecheck": "node scripts/typecheck.mjs",
+    "aggregate:check": "node dsh-skins/scripts/aggregate.mjs --check",
+    "aggregate": "node dsh-skins/scripts/aggregate.mjs",
+    "skin-center:check": "node scripts/skin-center-check.mjs",
+    "gallery:check": "node gallery/scripts/check.mjs",
+    "gallery:build": "node gallery/scripts/build.mjs",
+    "docs:check": "node scripts/docs-check.mjs",
+    "skin:new": "node scripts/dsh-skin-new.mjs",
+    "plugin:new": "node scripts/dsh-plugin-new.mjs",
+    "release:notes": "node scripts/release-notes.mjs",
+    "verify:version": "node scripts/verify-version.mjs"
+  },
+  "workspaces": {
+    "packages": [
+      "apps/*",
+      "plugins/*",
+      "skins/*",
+      "shared",
+      "dsh-skins"
+    ]
+  }
+}

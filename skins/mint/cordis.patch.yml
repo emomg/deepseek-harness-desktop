@@ -1,0 +1,6 @@
+# @dsh-desktop/skin-mint：薄荷（Mint）—— 极简 editorial 原创皮肤
+
+- insert:
+    - id: dsh-desktop-skin-mint
+      name: '@dsh-desktop/skin-mint'
+      config: {}

@@ -1,0 +1,12 @@
+# 双语配对（CI 门禁 docs:check 校验）
+namespace: '@dsh-desktop/skin-graphite'
+entries:
+  - id: name
+    zh: 石墨
+    en: Graphite
+  - id: tagline
+    zh: 极简灰阶 + 一抹墨黑 + 高对比
+    en: 极简灰阶 + 一抹墨黑 + 高对比
+  - id: description
+    zh: 更深的冷灰底 + 强对比。编辑工作、文字密集、想集中注意力时的默认。
+    en: 更深的冷灰底 + 强对比。编辑工作、文字密集、想集中注意力时的默认。

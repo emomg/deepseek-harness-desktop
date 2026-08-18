@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="zh">
+<head>
+  <meta charset="utf-8"/>
+  <title>dsh-desktop · 皮肤画廊 · 6 款极简 editorial 原创皮肤</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <style>
+    :root {
+      color-scheme: light;
+      --page-bg: #fafaf7;
+      --page-fg: #1a1a1a;
+      --page-fg-2: #6a6a66;
+      --page-border: rgba(0,0,0,.08);
+      --page-mono: "Cascadia Code", Consolas, monospace;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+      background: var(--page-bg);
+      color: var(--page-fg);
+      line-height: 1.6;
+    }
+    .page { max-width: 1240px; margin: 0 auto; padding: 56px 32px 96px; }
+    .page__head { margin-bottom: 40px; }
+    .page__eyebrow { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--page-fg-2); }
+    .page__title { font-size: 32px; font-weight: 600; margin: 8px 0 12px; letter-spacing: -.01em; }
+    .page__lead { font-size: 16px; color: var(--page-fg-2); max-width: 720px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; }
+    .card {
+      border: 1px solid var(--page-border);
+      border-radius: 14px;
+      padding: 18px;
+      background: var(--dsh-bg-secondary);
+      color: var(--dsh-fg-primary);
+      display: flex; flex-direction: column; gap: 12px;
+    }
+    .card__prev {
+      position: relative;
+      height: 144px;
+      border-radius: 10px;
+      background: var(--dsh-bg-primary);
+      border: 1px solid var(--dsh-border);
+      overflow: hidden;
+    }
+    .prev__glow {
+      position: absolute; inset: 0;
+      background:
+        radial-gradient(120% 90% at 88% -10%, var(--dsh-glow-1), transparent 60%),
+        radial-gradient(100% 80% at -8% 110%, var(--dsh-glow-2), transparent 55%);
+    }
+    .prev__chip {
+      position: absolute; top: 10px; left: 12px;
+      font-family: var(--page-mono);
+      font-size: 10px; letter-spacing: .04em;
+      background: var(--dsh-bg-elevated);
+      color: var(--dsh-fg-tertiary);
+      padding: 2px 6px; border-radius: 4px;
+    }
+    .prev__name {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--dsh-fg-primary);
+      font-size: 26px; font-weight: 600; letter-spacing: .04em;
+    }
+    .card__head h2 {
+      margin: 0; font-size: 16px; font-weight: 600;
+      display: flex; align-items: baseline; gap: 8px;
+    }
+    .card__en {
+      font-family: var(--page-mono);
+      font-size: 11px; letter-spacing: .04em;
+      color: var(--dsh-fg-tertiary);
+      font-weight: 400;
+    }
+    .card__tagline { margin: 6px 0 0; font-size: 13px; color: var(--dsh-fg-secondary); }
+    .card__desc { margin: 0; font-size: 12px; color: var(--dsh-fg-tertiary); }
+    .card__tags { display: flex; flex-wrap: wrap; gap: 4px; }
+    .pill {
+      font-family: var(--page-mono);
+      font-size: 10px; padding: 2px 6px; border-radius: 4px;
+      background: var(--dsh-bg-elevated); color: var(--dsh-fg-tertiary);
+    }
+    .card__tokens { margin-top: auto; }
+    .card__tokens summary {
+      cursor: pointer; font-size: 11px; color: var(--dsh-fg-tertiary);
+      padding: 4px 0;
+    }
+    .card__tokens table { width: 100%; border-collapse: collapse; font-size: 11px; }
+    .card__tokens td { padding: 3px 4px; border-bottom: 1px solid var(--dsh-border); vertical-align: top; }
+    .card__tokens td:first-child { width: 50%; }
+    .card__tokens code { font-family: var(--page-mono); color: var(--dsh-fg-secondary); }
+    .page__foot { margin-top: 64px; padding-top: 24px; border-top: 1px solid var(--page-border); font-size: 12px; color: var(--page-fg-2); }
+    code { font-family: var(--page-mono); }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="page__head">
+      <div class="page__eyebrow">dsh-desktop · skin gallery</div>
+      <h1 class="page__title">6 款极简 editorial 原创皮肤</h1>
+      <p class="page__lead">
+        为 dsh-desktop 桌面端的 DSH Web UI 设计的原创皮肤系统。每款皮肤是 18 个
+        CSS token 的完整覆写，呈现一种独立的视觉情绪。先试穿再应用，离开本页或点
+        还原即可完全回退。
+      </p>
+    </header>
+    <section class="grid">
+      <article class="card" style="--dsh-bg-primary: #fafaf7; --dsh-bg-secondary: #f3f1ec; --dsh-bg-elevated: #ffffff; --dsh-fg-primary: #1a1a1a; --dsh-fg-secondary: #4a4a48; --dsh-fg-tertiary: #8a8a86; --dsh-fg-disabled: #b8b8b4; --dsh-border: rgba(0, 0, 0, 0.06); --dsh-border-strong: rgba(0, 0, 0, 0.12); --dsh-accent: #1a1a1a; --dsh-accent-fg: #ffffff; --dsh-glass-bg: rgba(250, 250, 247, 0.78); --dsh-glass-border: rgba(0, 0, 0, 0.06); --dsh-glass-blur: 22; --dsh-shadow: 0 1px 2px rgba(0,0,0,.04), 0 8px 24px rgba(0,0,0,.04); --dsh-glow-1: rgba(0, 0, 0, 0.03); --dsh-glow-2: rgba(0, 0, 0, 0.015); --dsh-mode: light" data-skin-id="bone-white">
+  <div class="card__prev" aria-hidden="true">
+    <div class="prev__glow"></div>
+    <div class="prev__chip">bone-white · light</div>
+    <div class="prev__name">骨白</div>
+  </div>
+  <div class="card__head">
+    <h2>骨白 <span class="card__en">Bone White</span></h2>
+    <p class="card__tagline">冷白底 + 大量负空间 + 一抹墨黑</p>
+  </div>
+  <p class="card__desc">极简 clean editorial 基线：冷白底配上一抹墨黑，大量负空间留给工作本身。默认皮肤，最克制的入门。</p>
+  <div class="card__tags"><span class="pill">light</span><span class="pill">minimal</span><span class="pill">editorial</span><span class="pill">default</span></div>
+  <details class="card__tokens">
+    <summary>18 token values</summary>
+    <table>
+      <tr><td><code>--dsh-bg-primary</code></td><td><code>#fafaf7</code></td></tr><tr><td><code>--dsh-bg-secondary</code></td><td><code>#f3f1ec</code></td></tr><tr><td><code>--dsh-bg-elevated</code></td><td><code>#ffffff</code></td></tr><tr><td><code>--dsh-fg-primary</code></td><td><code>#1a1a1a</code></td></tr><tr><td><code>--dsh-fg-secondary</code></td><td><code>#4a4a48</code></td></tr><tr><td><code>--dsh-fg-tertiary</code></td><td><code>#8a8a86</code></td></tr><tr><td><code>--dsh-fg-disabled</code></td><td><code>#b8b8b4</code></td></tr><tr><td><code>--dsh-border</code></td><td><code>rgba(0, 0, 0, 0.06)</code></td></tr><tr><td><code>--dsh-border-strong</code></td><td><code>rgba(0, 0, 0, 0.12)</code></td></tr><tr><td><code>--dsh-accent</code></td><td><code>#1a1a1a</code></td></tr><tr><td><code>--dsh-accent-fg</code></td><td><code>#ffffff</code></td></tr><tr><td><code>--dsh-glass-bg</code></td><td><code>rgba(250, 250, 247, 0.78)</code></td></tr><tr><td><code>--dsh-glass-border</code></td><td><code>rgba(0, 0, 0, 0.06)</code></td></tr><tr><td><code>--dsh-glass-blur</code></td><td><code>22</code></td></tr><tr><td><code>--dsh-shadow</code></td><td><code>0 1px 2px rgba(0,0,0,.04), 0 8px 24px rgba(0,0,0,.04)</code></td></tr><tr><td><code>--dsh-glow-1</code></td><td><code>rgba(0, 0, 0, 0.03)</code></td></tr><tr><td><code>--dsh-glow-2</code></td><td><code>rgba(0, 0, 0, 0.015)</code></td></tr><tr><td><code>--dsh-mode</code></td><td><code>light</code></td></tr>
+    </table>
+  </details>
+</article>
+<article class="card" style="--dsh-bg-primary: #ececeb; --dsh-bg-secondary: #dededd; --dsh-bg-elevated: #f4f4f3; --dsh-fg-primary: #0e0e0e; --dsh-fg-secondary: #3a3a3a; --dsh-fg-tertiary: #6e6e6e; --dsh-fg-disabled: #a4a4a4; --dsh-border: rgba(0, 0, 0, 0.10); --dsh-border-strong: rgba(0, 0, 0, 0.18); --dsh-accent: #0e0e0e; --dsh-accent-fg: #ffffff; --dsh-glass-bg: rgba(236, 236, 235, 0.82); --dsh-glass-border: rgba(0, 0, 0, 0.10); --dsh-glass-blur: 24; --dsh-shadow: 0 1px 2px rgba(0,0,0,.06), 0 8px 28px rgba(0,0,0,.06); --dsh-glow-1: rgba(0, 0, 0, 0.04); --dsh-glow-2: rgba(0, 0, 0, 0.02); --dsh-mode: light" data-skin-id="graphite">
+  <div class="card__prev" aria-hidden="true">
+    <div class="prev__glow"></div>
+    <div class="prev__chip">graphite · light</div>
+    <div class="prev__name">石墨</div>
+  </div>
+  <div class="card__head">
+    <h2>石墨 <span class="card__en">Graphite</span></h2>
+    <p class="card__tagline">极简灰阶 + 一抹墨黑 + 高对比</p>
+  </div>
+  <p class="card__desc">更深的冷灰底 + 强对比。编辑工作、文字密集、想集中注意力时的默认。</p>
+  <div class="card__tags"><span class="pill">light</span><span class="pill">minimal</span><span class="pill">editorial</span><span class="pill">focus</span></div>
+  <details class="card__tokens">
+    <summary>18 token values</summary>
+    <table>
+      <tr><td><code>--dsh-bg-primary</code></td><td><code>#ececeb</code></td></tr><tr><td><code>--dsh-bg-secondary</code></td><td><code>#dededd</code></td></tr><tr><td><code>--dsh-bg-elevated</code></td><td><code>#f4f4f3</code></td></tr><tr><td><code>--dsh-fg-primary</code></td><td><code>#0e0e0e</code></td></tr><tr><td><code>--dsh-fg-secondary</code></td><td><code>#3a3a3a</code></td></tr><tr><td><code>--dsh-fg-tertiary</code></td><td><code>#6e6e6e</code></td></tr><tr><td><code>--dsh-fg-disabled</code></td><td><code>#a4a4a4</code></td></tr><tr><td><code>--dsh-border</code></td><td><code>rgba(0, 0, 0, 0.10)</code></td></tr><tr><td><code>--dsh-border-strong</code></td><td><code>rgba(0, 0, 0, 0.18)</code></td></tr><tr><td><code>--dsh-accent</code></td><td><code>#0e0e0e</code></td></tr><tr><td><code>--dsh-accent-fg</code></td><td><code>#ffffff</code></td></tr><tr><td><code>--dsh-glass-bg</code></td><td><code>rgba(236, 236, 235, 0.82)</code></td></tr><tr><td><code>--dsh-glass-border</code></td><td><code>rgba(0, 0, 0, 0.10)</code></td></tr><tr><td><code>--dsh-glass-blur</code></td><td><code>24</code></td></tr><tr><td><code>--dsh-shadow</code></td><td><code>0 1px 2px rgba(0,0,0,.06), 0 8px 28px rgba(0,0,0,.06)</code></td></tr><tr><td><code>--dsh-glow-1</code></td><td><code>rgba(0, 0, 0, 0.04)</code></td></tr><tr><td><code>--dsh-glow-2</code></td><td><code>rgba(0, 0, 0, 0.02)</code></td></tr><tr><td><code>--dsh-mode</code></td><td><code>light</code></td></tr>
+    </table>
+  </details>
+</article>
+<article class="card" style="--dsh-bg-primary: #f7f5f8; --dsh-bg-secondary: #ece8ef; --dsh-bg-elevated: #fdfcfe; --dsh-fg-primary: #1c1820; --dsh-fg-secondary: #4a4350; --dsh-fg-tertiary: #857d8c; --dsh-fg-disabled: #b3acb8; --dsh-border: rgba(28, 24, 32, 0.07); --dsh-border-strong: rgba(28, 24, 32, 0.14); --dsh-accent: #7a6592; --dsh-accent-fg: #ffffff; --dsh-glass-bg: rgba(247, 245, 248, 0.80); --dsh-glass-border: rgba(28, 24, 32, 0.07); --dsh-glass-blur: 22; --dsh-shadow: 0 1px 2px rgba(28,24,32,.04), 0 8px 24px rgba(28,24,32,.04); --dsh-glow-1: rgba(122, 101, 146, 0.06); --dsh-glow-2: rgba(122, 101, 146, 0.03); --dsh-mode: light" data-skin-id="lilac">
+  <div class="card__prev" aria-hidden="true">
+    <div class="prev__glow"></div>
+    <div class="prev__chip">lilac · light</div>
+    <div class="prev__name">丁香</div>
+  </div>
+  <div class="card__head">
+    <h2>丁香 <span class="card__en">Lilac</span></h2>
+    <p class="card__tagline">冷白 + 一抹极低饱和丁香紫</p>
+  </div>
+  <p class="card__desc">冷白底配一抹极低饱和丁香紫。安静中的一点冷色，绝不抢戏。</p>
+  <div class="card__tags"><span class="pill">light</span><span class="pill">minimal</span><span class="pill">editorial</span><span class="pill">cool</span><span class="pill">accent</span></div>
+  <details class="card__tokens">
+    <summary>18 token values</summary>
+    <table>
+      <tr><td><code>--dsh-bg-primary</code></td><td><code>#f7f5f8</code></td></tr><tr><td><code>--dsh-bg-secondary</code></td><td><code>#ece8ef</code></td></tr><tr><td><code>--dsh-bg-elevated</code></td><td><code>#fdfcfe</code></td></tr><tr><td><code>--dsh-fg-primary</code></td><td><code>#1c1820</code></td></tr><tr><td><code>--dsh-fg-secondary</code></td><td><code>#4a4350</code></td></tr><tr><td><code>--dsh-fg-tertiary</code></td><td><code>#857d8c</code></td></tr><tr><td><code>--dsh-fg-disabled</code></td><td><code>#b3acb8</code></td></tr><tr><td><code>--dsh-border</code></td><td><code>rgba(28, 24, 32, 0.07)</code></td></tr><tr><td><code>--dsh-border-strong</code></td><td><code>rgba(28, 24, 32, 0.14)</code></td></tr><tr><td><code>--dsh-accent</code></td><td><code>#7a6592</code></td></tr><tr><td><code>--dsh-accent-fg</code></td><td><code>#ffffff</code></td></tr><tr><td><code>--dsh-glass-bg</code></td><td><code>rgba(247, 245, 248, 0.80)</code></td></tr><tr><td><code>--dsh-glass-border</code></td><td><code>rgba(28, 24, 32, 0.07)</code></td></tr><tr><td><code>--dsh-glass-blur</code></td><td><code>22</code></td></tr><tr><td><code>--dsh-shadow</code></td><td><code>0 1px 2px rgba(28,24,32,.04), 0 8px 24px rgba(28,24,32,.04)</code></td></tr><tr><td><code>--dsh-glow-1</code></td><td><code>rgba(122, 101, 146, 0.06)</code></td></tr><tr><td><code>--dsh-glow-2</code></td><td><code>rgba(122, 101, 146, 0.03)</code></td></tr><tr><td><code>--dsh-mode</code></td><td><code>light</code></td></tr>
+    </table>
+  </details>
+</article>
+<article class="card" style="--dsh-bg-primary: #f4f6f3; --dsh-bg-secondary: #e5ebe4; --dsh-bg-elevated: #fbfcf9; --dsh-fg-primary: #141a16; --dsh-fg-secondary: #3c4540; --dsh-fg-tertiary: #737e76; --dsh-fg-disabled: #a5aea6; --dsh-border: rgba(20, 26, 22, 0.07); --dsh-border-strong: rgba(20, 26, 22, 0.14); --dsh-accent: #5e9275; --dsh-accent-fg: #ffffff; --dsh-glass-bg: rgba(244, 246, 243, 0.80); --dsh-glass-border: rgba(20, 26, 22, 0.07); --dsh-glass-blur: 22; --dsh-shadow: 0 1px 2px rgba(20,26,22,.04), 0 8px 24px rgba(20,26,22,.04); --dsh-glow-1: rgba(94, 146, 117, 0.06); --dsh-glow-2: rgba(94, 146, 117, 0.03); --dsh-mode: light" data-skin-id="mint">
+  <div class="card__prev" aria-hidden="true">
+    <div class="prev__glow"></div>
+    <div class="prev__chip">mint · light</div>
+    <div class="prev__name">薄荷</div>
+  </div>
+  <div class="card__head">
+    <h2>薄荷 <span class="card__en">Mint</span></h2>
+    <p class="card__tagline">米白 + 极低饱和薄荷</p>
+  </div>
+  <p class="card__desc">米白底配一抹极低饱和薄荷。最轻的「冷色 accent」，适合长时间轻量阅读。</p>
+  <div class="card__tags"><span class="pill">light</span><span class="pill">minimal</span><span class="pill">editorial</span><span class="pill">cool</span><span class="pill">accent</span></div>
+  <details class="card__tokens">
+    <summary>18 token values</summary>
+    <table>
+      <tr><td><code>--dsh-bg-primary</code></td><td><code>#f4f6f3</code></td></tr><tr><td><code>--dsh-bg-secondary</code></td><td><code>#e5ebe4</code></td></tr><tr><td><code>--dsh-bg-elevated</code></td><td><code>#fbfcf9</code></td></tr><tr><td><code>--dsh-fg-primary</code></td><td><code>#141a16</code></td></tr><tr><td><code>--dsh-fg-secondary</code></td><td><code>#3c4540</code></td></tr><tr><td><code>--dsh-fg-tertiary</code></td><td><code>#737e76</code></td></tr><tr><td><code>--dsh-fg-disabled</code></td><td><code>#a5aea6</code></td></tr><tr><td><code>--dsh-border</code></td><td><code>rgba(20, 26, 22, 0.07)</code></td></tr><tr><td><code>--dsh-border-strong</code></td><td><code>rgba(20, 26, 22, 0.14)</code></td></tr><tr><td><code>--dsh-accent</code></td><td><code>#5e9275</code></td></tr><tr><td><code>--dsh-accent-fg</code></td><td><code>#ffffff</code></td></tr><tr><td><code>--dsh-glass-bg</code></td><td><code>rgba(244, 246, 243, 0.80)</code></td></tr><tr><td><code>--dsh-glass-border</code></td><td><code>rgba(20, 26, 22, 0.07)</code></td></tr><tr><td><code>--dsh-glass-blur</code></td><td><code>22</code></td></tr><tr><td><code>--dsh-shadow</code></td><td><code>0 1px 2px rgba(20,26,22,.04), 0 8px 24px rgba(20,26,22,.04)</code></td></tr><tr><td><code>--dsh-glow-1</code></td><td><code>rgba(94, 146, 117, 0.06)</code></td></tr><tr><td><code>--dsh-glow-2</code></td><td><code>rgba(94, 146, 117, 0.03)</code></td></tr><tr><td><code>--dsh-mode</code></td><td><code>light</code></td></tr>
+    </table>
+  </details>
+</article>
+<article class="card" style="--dsh-bg-primary: #eef0f2; --dsh-bg-secondary: #dfe2e6; --dsh-bg-elevated: #f6f7f8; --dsh-fg-primary: #0c1014; --dsh-fg-secondary: #2c333b; --dsh-fg-tertiary: #5b6770; --dsh-fg-disabled: #8a949c; --dsh-border: rgba(12, 16, 20, 0.08); --dsh-border-strong: rgba(12, 16, 20, 0.16); --dsh-accent: #0c1014; --dsh-accent-fg: #ffffff; --dsh-glass-bg: rgba(238, 240, 242, 0.80); --dsh-glass-border: rgba(12, 16, 20, 0.08); --dsh-glass-blur: 26; --dsh-shadow: 0 1px 2px rgba(12,16,20,.05), 0 8px 28px rgba(12,16,20,.06); --dsh-glow-1: rgba(60, 90, 140, 0.05); --dsh-glow-2: rgba(60, 90, 140, 0.025); --dsh-mode: light" data-skin-id="mist">
+  <div class="card__prev" aria-hidden="true">
+    <div class="prev__glow"></div>
+    <div class="prev__chip">mist · light</div>
+    <div class="prev__name">雾</div>
+  </div>
+  <div class="card__head">
+    <h2>雾 <span class="card__en">Mist</span></h2>
+    <p class="card__tagline">冷感湿润 · 雨意蓝灰 + 墨黑</p>
+  </div>
+  <p class="card__desc">近冷蓝灰的雨意底色 + 强对比墨黑。安静、专注、不抢戏。</p>
+  <div class="card__tags"><span class="pill">light</span><span class="pill">minimal</span><span class="pill">editorial</span><span class="pill">cool</span></div>
+  <details class="card__tokens">
+    <summary>18 token values</summary>
+    <table>
+      <tr><td><code>--dsh-bg-primary</code></td><td><code>#eef0f2</code></td></tr><tr><td><code>--dsh-bg-secondary</code></td><td><code>#dfe2e6</code></td></tr><tr><td><code>--dsh-bg-elevated</code></td><td><code>#f6f7f8</code></td></tr><tr><td><code>--dsh-fg-primary</code></td><td><code>#0c1014</code></td></tr><tr><td><code>--dsh-fg-secondary</code></td><td><code>#2c333b</code></td></tr><tr><td><code>--dsh-fg-tertiary</code></td><td><code>#5b6770</code></td></tr><tr><td><code>--dsh-fg-disabled</code></td><td><code>#8a949c</code></td></tr><tr><td><code>--dsh-border</code></td><td><code>rgba(12, 16, 20, 0.08)</code></td></tr><tr><td><code>--dsh-border-strong</code></td><td><code>rgba(12, 16, 20, 0.16)</code></td></tr><tr><td><code>--dsh-accent</code></td><td><code>#0c1014</code></td></tr><tr><td><code>--dsh-accent-fg</code></td><td><code>#ffffff</code></td></tr><tr><td><code>--dsh-glass-bg</code></td><td><code>rgba(238, 240, 242, 0.80)</code></td></tr><tr><td><code>--dsh-glass-border</code></td><td><code>rgba(12, 16, 20, 0.08)</code></td></tr><tr><td><code>--dsh-glass-blur</code></td><td><code>26</code></td></tr><tr><td><code>--dsh-shadow</code></td><td><code>0 1px 2px rgba(12,16,20,.05), 0 8px 28px rgba(12,16,20,.06)</code></td></tr><tr><td><code>--dsh-glow-1</code></td><td><code>rgba(60, 90, 140, 0.05)</code></td></tr><tr><td><code>--dsh-glow-2</code></td><td><code>rgba(60, 90, 140, 0.025)</code></td></tr><tr><td><code>--dsh-mode</code></td><td><code>light</code></td></tr>
+    </table>
+  </details>
+</article>
+<article class="card" style="--dsh-bg-primary: #f5efe5; --dsh-bg-secondary: #ebe4d6; --dsh-bg-elevated: #fbf8f0; --dsh-fg-primary: #1f1b16; --dsh-fg-secondary: #524a3e; --dsh-fg-tertiary: #8a7f6e; --dsh-fg-disabled: #b6ad9c; --dsh-border: rgba(31, 27, 22, 0.08); --dsh-border-strong: rgba(31, 27, 22, 0.16); --dsh-accent: #b8434a; --dsh-accent-fg: #ffffff; --dsh-glass-bg: rgba(245, 239, 229, 0.80); --dsh-glass-border: rgba(31, 27, 22, 0.08); --dsh-glass-blur: 22; --dsh-shadow: 0 1px 2px rgba(31,27,22,.05), 0 8px 24px rgba(31,27,22,.05); --dsh-glow-1: rgba(184, 67, 74, 0.08); --dsh-glow-2: rgba(184, 67, 74, 0.04); --dsh-mode: light" data-skin-id="paper">
+  <div class="card__prev" aria-hidden="true">
+    <div class="prev__glow"></div>
+    <div class="prev__chip">paper · light</div>
+    <div class="prev__name">宣纸</div>
+  </div>
+  <div class="card__head">
+    <h2>宣纸 <span class="card__en">Paper</span></h2>
+    <p class="card__tagline">米白 + 朱砂一抹（暖底冷顶）</p>
+  </div>
+  <p class="card__desc">略带暖意的米白底，配一抹朱砂色 accent。最有手感的「纸」，适合长读与写作。</p>
+  <div class="card__tags"><span class="pill">light</span><span class="pill">minimal</span><span class="pill">editorial</span><span class="pill">warm</span></div>
+  <details class="card__tokens">
+    <summary>18 token values</summary>
+    <table>
+      <tr><td><code>--dsh-bg-primary</code></td><td><code>#f5efe5</code></td></tr><tr><td><code>--dsh-bg-secondary</code></td><td><code>#ebe4d6</code></td></tr><tr><td><code>--dsh-bg-elevated</code></td><td><code>#fbf8f0</code></td></tr><tr><td><code>--dsh-fg-primary</code></td><td><code>#1f1b16</code></td></tr><tr><td><code>--dsh-fg-secondary</code></td><td><code>#524a3e</code></td></tr><tr><td><code>--dsh-fg-tertiary</code></td><td><code>#8a7f6e</code></td></tr><tr><td><code>--dsh-fg-disabled</code></td><td><code>#b6ad9c</code></td></tr><tr><td><code>--dsh-border</code></td><td><code>rgba(31, 27, 22, 0.08)</code></td></tr><tr><td><code>--dsh-border-strong</code></td><td><code>rgba(31, 27, 22, 0.16)</code></td></tr><tr><td><code>--dsh-accent</code></td><td><code>#b8434a</code></td></tr><tr><td><code>--dsh-accent-fg</code></td><td><code>#ffffff</code></td></tr><tr><td><code>--dsh-glass-bg</code></td><td><code>rgba(245, 239, 229, 0.80)</code></td></tr><tr><td><code>--dsh-glass-border</code></td><td><code>rgba(31, 27, 22, 0.08)</code></td></tr><tr><td><code>--dsh-glass-blur</code></td><td><code>22</code></td></tr><tr><td><code>--dsh-shadow</code></td><td><code>0 1px 2px rgba(31,27,22,.05), 0 8px 24px rgba(31,27,22,.05)</code></td></tr><tr><td><code>--dsh-glow-1</code></td><td><code>rgba(184, 67, 74, 0.08)</code></td></tr><tr><td><code>--dsh-glow-2</code></td><td><code>rgba(184, 67, 74, 0.04)</code></td></tr><tr><td><code>--dsh-mode</code></td><td><code>light</code></td></tr>
+    </table>
+  </details>
+</article>
+    </section>
+    <footer class="page__foot">
+      Generated <code>2026-08-18T06:01:08.320Z</code> · tokens per skin
+      18 · gallery version 1
+    </footer>
+  </main>
+</body>
+</html>

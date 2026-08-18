@@ -1,0 +1,17 @@
+# dsh-plugin-image-input: 输入框粘贴/拖图片 → 视觉模型识图
+#
+# 视觉端点（OpenAI 兼容）可通过插件行 config 配置，也可用环境变量覆盖：
+#   IMAGE_VISION_BASE_URL / IMAGE_VISION_MODEL / IMAGE_VISION_API_KEY
+# 未配置时 vision 工具会返回明确提示，其余功能（粘贴保存、路径提示）仍可用。
+- insert:
+    - id: dsh-image-input
+      name: 'dsh-plugin-image-input'
+      config:
+        baseUrl: ''
+        model: ''
+        apiKeyEnv: ''
+        maxImageBytes: 25165824
+        maxImages: 200
+        timeoutMs: 120000
+        maxTokens: 4096
+        saveDir: 'D:/dsh/.dsh-image-input'

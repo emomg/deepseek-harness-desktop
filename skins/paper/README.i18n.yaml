@@ -1,0 +1,12 @@
+# 双语配对（CI 门禁 docs:check 校验）
+namespace: '@dsh-desktop/skin-paper'
+entries:
+  - id: name
+    zh: 宣纸
+    en: Paper
+  - id: tagline
+    zh: 米白 + 朱砂一抹（暖底冷顶）
+    en: 米白 + 朱砂一抹（暖底冷顶）
+  - id: description
+    zh: 略带暖意的米白底，配一抹朱砂色 accent。最有手感的「纸」，适合长读与写作。
+    en: 略带暖意的米白底，配一抹朱砂色 accent。最有手感的「纸」，适合长读与写作。

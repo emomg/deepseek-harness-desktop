@@ -1,0 +1,6 @@
+# @dsh-desktop/skin-paper：宣纸（Paper）—— 极简 editorial 原创皮肤
+
+- insert:
+    - id: dsh-desktop-skin-paper
+      name: '@dsh-desktop/skin-paper'
+      config: {}
