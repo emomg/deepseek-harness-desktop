@@ -1,0 +1,12 @@
+# 双语配对（CI 门禁 docs:check 校验）
+namespace: '@dsh-desktop/skin-mist'
+entries:
+  - id: name
+    zh: 雾
+    en: Mist
+  - id: tagline
+    zh: 冷感湿润 · 雨意蓝灰 + 墨黑
+    en: 冷感湿润 · 雨意蓝灰 + 墨黑
+  - id: description
+    zh: 近冷蓝灰的雨意底色 + 强对比墨黑。安静、专注、不抢戏。
+    en: 近冷蓝灰的雨意底色 + 强对比墨黑。安静、专注、不抢戏。

@@ -1,19 +1,23 @@
 {
-  "name": "@dsh-desktop/skin-center",
+  "name": "@dsh-desktop/skin-graphite",
   "version": "0.1.0",
-  "description": "dsh-desktop 皮肤中心 GUI 卡：从共享注册表读全部皮肤，渲染列表/试穿/应用/还原/微调。",
+  "description": "石墨 · 极简 editorial 皮肤：极简灰阶 + 一抹墨黑 + 高对比。",
   "type": "module",
   "main": "lib/index.js",
   "exports": {
     ".": "./lib/index.js",
     "./client": "./lib/client.js",
+    "./skin.json": "./skin.json",
     "./package.json": "./package.json"
   },
   "files": [
     "lib",
+    "skin.json",
     "cordis.patch.yml",
+    "preview",
     "README.md",
-    "README.zh.md"
+    "README.zh.md",
+    "README.i18n.yaml"
   ],
   "license": "MIT",
   "dsh": {
@@ -29,8 +33,5 @@
   },
   "dependencies": {
     "@dsh-desktop/shared": "workspace:*"
-  },
-  "scripts": {
-    "test": "node tests/run-all.js"
   }
 }

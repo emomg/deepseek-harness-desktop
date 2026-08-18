@@ -1,0 +1,34 @@
+{
+  "id": "bone-white",
+  "name": "骨白",
+  "nameEn": "Bone White",
+  "tagline": "冷白底 + 大量负空间 + 一抹墨黑",
+  "description": "极简 clean editorial 基线：冷白底配上一抹墨黑，大量负空间留给工作本身。默认皮肤，最克制的入门。",
+  "tags": [
+    "light",
+    "minimal",
+    "editorial",
+    "default"
+  ],
+  "order": 1,
+  "vars": {
+    "--dsh-bg-primary": "#fafaf7",
+    "--dsh-bg-secondary": "#f3f1ec",
+    "--dsh-bg-elevated": "#ffffff",
+    "--dsh-fg-primary": "#1a1a1a",
+    "--dsh-fg-secondary": "#4a4a48",
+    "--dsh-fg-tertiary": "#8a8a86",
+    "--dsh-fg-disabled": "#b8b8b4",
+    "--dsh-border": "rgba(0, 0, 0, 0.06)",
+    "--dsh-border-strong": "rgba(0, 0, 0, 0.12)",
+    "--dsh-accent": "#1a1a1a",
+    "--dsh-accent-fg": "#ffffff",
+    "--dsh-glass-bg": "rgba(250, 250, 247, 0.78)",
+    "--dsh-glass-border": "rgba(0, 0, 0, 0.06)",
+    "--dsh-glass-blur": 22,
+    "--dsh-shadow": "0 1px 2px rgba(0,0,0,.04), 0 8px 24px rgba(0,0,0,.04)",
+    "--dsh-glow-1": "rgba(0, 0, 0, 0.03)",
+    "--dsh-glow-2": "rgba(0, 0, 0, 0.015)",
+    "--dsh-mode": "light"
+  }
+}

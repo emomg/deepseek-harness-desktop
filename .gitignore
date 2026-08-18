@@ -42,3 +42,6 @@ Desktop.ini
 *.log
 .idea/
 .vscode/
+
+# ---- 临时备份（mavis / Move-Item 删除前的临时回收站）----
+.trash-backup/

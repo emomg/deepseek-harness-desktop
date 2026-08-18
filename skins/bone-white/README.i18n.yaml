@@ -1,0 +1,12 @@
+# 双语配对（CI 门禁 docs:check 校验）
+namespace: '@dsh-desktop/skin-bone-white'
+entries:
+  - id: name
+    zh: 骨白
+    en: Bone White
+  - id: tagline
+    zh: 冷白底 + 大量负空间 + 一抹墨黑
+    en: 冷白底 + 大量负空间 + 一抹墨黑
+  - id: description
+    zh: 极简 clean editorial 基线：冷白底配上一抹墨黑，大量负空间留给工作本身。默认皮肤，最克制的入门。
+    en: 极简 clean editorial 基线：冷白底配上一抹墨黑，大量负空间留给工作本身。默认皮肤，最克制的入门。

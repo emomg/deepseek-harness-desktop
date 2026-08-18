@@ -1,0 +1,6 @@
+# @dsh-desktop/skin-graphite：石墨（Graphite）—— 极简 editorial 原创皮肤
+
+- insert:
+    - id: dsh-desktop-skin-graphite
+      name: '@dsh-desktop/skin-graphite'
+      config: {}

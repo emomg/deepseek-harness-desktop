@@ -1,115 +1,126 @@
-# 🚀 DeepSeek Harness 桌面版 · 新手安装指南
+# dsh-desktop 新手指南
 
-> 本指南写给第一次接触的朋友，跟着步骤做 **5 分钟就能装好正式版**。
-> 想用进阶的**专业版**（任务模板 / 仪表盘 / 自动摘要 / 评审门禁）请看文末「第二部分」。
-> 遇到问题请看文末「常见问题」。
+> Windows 10/11 · Tauri 桌面端 + DSH 插件 + 6 款原创皮肤
 
 ---
 
-## 第一部分：正式版（小白必看）
+## 第一部分：正式版
 
-### 这是什么？
+### 下载安装
 
-DeepSeek Harness 是深度求索（DeepSeek）出品的 AI 编程助手平台。本项目的**桌面版**像普通软件一样：双击安装、双击打开，后台服务会自动帮你跑起来，不用碰命令行。
+1. 打开 https://github.com/emomg/deepseek-harness-desktop/releases
+2. 选最新 v2.0.0 的安装包：
+   - **`Setup-2.0.0-full.exe`**（约 100MB）—— 自带 Node.js + dsh 运行时，装完即用
+   - **`Setup-2.0.0.exe`**（约 4MB）—— 精简版，需本机 Node.js ≥ 18
+3. 双击安装，按提示下一步
 
-> 正式版 = `main` 分支 / Release `v1.0.0`；专业版是独立的测试版（`pro-v0.1` 分支 / `v1.0.0-pro`），两个版本**并存互不覆盖**。
+### 验证安装
 
-### 安装前，请确认
+1. 桌面会有「DeepSeek Harness」图标
+2. 双击启动，系统托盘会出现黑鲸鱼图标
+3. 主窗口加载 DSH Web UI
 
-- 电脑系统是 **Windows 10 或 Windows 11**
-- 电脑能正常上网
+### 卸载
 
-### 第 1 步：下载安装包
+控制面板 → 程序和功能 → DeepSeek Harness → 卸载
 
-1. 打开网页：<https://github.com/emomg/deepseek-harness-desktop>
-2. 点击页面右侧的 **Releases**（发行版）
-3. 选择 **`v1.0.0`（DeepSeek Harness Desktop v1.0.0，正式版）**，下载 **`DeepSeek-Harness-Desktop-Setup-1.0.0-full.exe`**（自包含版）
-
-> 💡 为什么选 `-full` 版？它已经把运行所需的程序都打包好了，**不需要**另外安装任何东西。另一个 `Setup-1.0.0.exe`（约 4MB）是给开发者用的精简版，需要自己装 Node.js。
-
-### 第 2 步：安装
-
-1. 双击刚才下载的 `DeepSeek-Harness-Desktop-Setup-1.0.0-full.exe`
-2. 一路点「下一步」→「安装」（安装到你账户的目录，**不需要管理员权限**）
-3. 安装界面会有一个勾选项「将内置 Node.js 添加到 PATH」——建议保留勾选：这样内置的 node/npm 命令也能在命令行里使用；如果电脑上已经有 Node.js，安装程序会自动跳过，不会影响你原有的环境
-4. 安装完成后会自动启动
-
-### 第 3 步：开始使用
-
-- 首次打开：应用会自动启动内置服务并弹出主窗口，稍等几秒即可使用
-- **内置插件自动就绪**：文件上传（回形针上传 PDF/Word/Excel/TXT）与图片识图（粘贴/拖拽图片）已随安装包内置，桌面端首次启动自动注册，**无需手动安装插件**
-- 点窗口右上角 **×** 不会退出，而是最小化到**系统托盘**（屏幕右下角的小图标）
-- 想彻底退出：右键托盘图标 → 点「退出」
-- 下次使用：双击桌面上的「DeepSeek Harness」快捷方式即可
-
-> 🖼️ **图片识图**需要配置视觉端点（一次即可）：设置环境变量 `IMAGE_VISION_BASE_URL` / `IMAGE_VISION_MODEL` / `IMAGE_VISION_API_KEY`（OpenAI 兼容，如 DashScope `qwen-vl-plus`、智谱 `glm-4v-flash`）。未配置时粘贴图片仍会保存为路径，`vision` 工具会提示配置方法。
+注意：卸载**不会删除** `~/.dsh` 目录（聊天记录、API Key 等）。如需清除数据请手动删除。
 
 ---
 
-## 第二部分：专业版（进阶，可选）
+## 第二部分：专业版
 
-专业版 = 正式版 + **DSH 插件**（`@dsh-pro/core` + 两个通用插件），提供：
-
-- 📋 **任务模板库**：高频任务固化成模板，composer 输入 `/tpl` 选择即发送
-- 📊 **项目仪表盘**：按工作区聚合会话 × 目标 × todo × 统计 × 自动摘要，阻塞高亮
-- ✍️ **会话自动摘要**：每轮任务完成自动生成 3 行摘要（目标/完成/下一步）
-- ✅ **评审门禁**：逐文件查看 diff → 接受/拒绝 → git commit（或放弃恢复）
-- 📎 **文件上传**（通用）：回形针 / 拖拽上传 PDF / Word / Excel / TXT
-- 🖼️ **图片识图**（通用）：输入框粘贴 / 拖拽图片，视觉 API 识图
+> 专业版 = 正式版 + 6 款原创皮肤 + DSH 插件全家桶
 
 ### 安装专业版
 
-1. 从 Releases 下载 **`v1.0.0-pro`** 的 `DeepSeek-Harness-Desktop-Setup-1.0.0-pro.exe`
-2. 双击安装（与正式版安装方式相同）
-3. **首次启动自动注册全部三个插件**（`@dsh-pro/core` + `dsh-files` + `dsh-plugin-image-input`），无需手动 `dsh plugin add`
+从 Releases 下载 `Setup-2.0.0-pro.exe`，双击安装。
 
-> 从旧版（0.x 插件 zip）升级：卸载旧安装包 → 安装 1.0 安装包即可；重复注册幂等，不会冲突。
+安装完成后：
+- **首次启动**自动注册全部 3 个 DSH 插件（`@dsh-pro/core` + `dsh-files` + `dsh-plugin-image-input`）
+- **皮肤中心**已可用（DSH 设置页 → 左侧「皮肤中心」）
 
-### 快速上手
+### 用皮肤中心切换皮肤
 
-1. 重启后，DSH **侧边栏底部**出现「Pro 面板」（仪表盘 / 模板 / 评审 三个页签）
-2. 在「工作区」新建工作区（选一个项目目录）→ 会话干活 → **每轮任务完成自动生成摘要**，仪表盘自动聚合
-3. composer 输入 **`/tpl`** → 选模板 → 填变量 → 直接发送给 AI 执行
-4. 干完活 → Pro 面板「评审」→ 选工作区「开始评审」→ 逐文件看 diff → **接受/拒绝** → 「提交已接受」
-5. 想管模板：Pro 面板「模板」页新建/编辑/删除
+1. 在 DSH 设置页左侧点「皮肤中心」
+2. 看到 6 款原创皮肤（骨白 / 石墨 / 宣纸 / 雾 / 丁香 / 薄荷）
+3. 点「试穿」即时切换（不保存）
+4. 满意后点「应用」一键保存
+5. 离开本页或点「退出试穿」完全还原到应用前
 
-> 详细使用说明见 [README.md](README.md)。
+### 用任务模板（dsh-pro）
+
+1. DSH 设置页左侧点「个性化」（或 composer 右上角）
+2. 进入「任务模板」标签
+3. 内置 4 个：修测试 / PR 描述 / 代码评审 / 跑一遍并总结
+4. 在 composer 输入 `/tpl` 选模板 → 填变量 → 发送
+
+### 用文件上传（dsh-files）
+
+1. composer 左下角点回形针图标
+2. 或直接拖拽 PDF / Word / Excel / TXT
+3. agent 用 `read_document` 工具直接读
+
+### 用图片识图（dsh-plugin-image-input）
+
+1. composer 里 Ctrl+V 粘贴图片
+2. 或拖拽图片
+3. 纯文本模型自动桥接视觉 API 识图
+4. 设置环境变量：
+   - `IMAGE_VISION_BASE_URL` —— 如 `https://dashscope.aliyuncs.com/compatible-mode/v1`
+   - `IMAGE_VISION_MODEL` —— 如 `qwen-vl-plus`
+   - `IMAGE_VISION_API_KEY` —— 你的 API Key
+
+---
+
+## 第三部分：开发与扩展
+
+### 加一款新皮肤
+
+```powershell
+# 1. 脚手架
+pnpm skin:new <id> --name <zh> --nameEn <en> --order <N>
+# 例：pnpm skin:new obsidian --name 墨石 --nameEn Obsidian --order 7
+
+# 2. 编辑 skins/<id>/skin.json 改 18 个 CSS token
+# 3. 跑门禁
+pnpm skin-center:check
+pnpm aggregate:check
+pnpm docs:check
+
+# 4. 启动 dsh web，新皮肤自动出现在皮肤中心
+```
+
+完整设计指南：[`docs/skin-design-guide.md`](docs/skin-design-guide.md)
+
+### 加一个新插件
+
+```powershell
+pnpm plugin:new my-tool
+# 编辑 plugins/my-tool/lib/{index,client}.js
+# 编辑 cordis.patch.yml 的 config
+```
+
+完整开发循环：[`docs/development.md`](docs/development.md)
+
+---
 
 ## 常见问题
 
-**问：双击安装包没反应？**
-答：先确认下载完整（`-full` 版约 100MB）。如果浏览器提示"不安全"，选择"保留"即可；安装包是开源的，源码在本仓库。
+**Q: 装完打开没反应？**
+A: 检查系统是不是 Windows 10/11，且已安装 WebView2（一般自带）。如果还不行，
+打开 `C:\Users\<你>\AppData\Roaming\DeepSeek Harness\logs\` 看最新日志。
 
-**问：提示找不到 WebView2Loader.dll 或无法打开窗口？**
-答：安装包已自带 WebView2Loader.dll，并会在缺少 WebView2 运行时（Windows 内置的网页内核）时自动静默安装。如果仍提示，可手动安装 WebView2 运行时：https://developer.microsoft.com/microsoft-edge/webview2/
+**Q: 3080 端口被占用？**
+A: 桌面端会复用已有 dsh 实例，不会重复启动。如果旧实例不是 2.0 版的，关闭它
+后再启动桌面端。
 
-**问：应用打不开，提示"拒绝访问"或闪退？**
-答：若安装目录旁生成了 `dsh-desktop-panic.log`，请把该文件内容发到 Issues：https://github.com/emomg/deepseek-harness-desktop/issues，会有人帮你排查。
+**Q: 怎么禁用某个内置插件？**
+A: 删 `~/.dsh/cordis.patch.yml` 里对应的 `insert` 段，然后重启桌面端。
 
-**问：需要管理员权限吗？**
-答：不需要。安装在自己账户的目录下（`%LOCALAPPDATA%\Programs\DeepSeek Harness`）。
+**Q: 6 款皮肤不够用？**
+A: 自己写一款——`pnpm skin:new <id>` 起骨架，改 `skin.json` 的 18 token。
 
-**问：我的聊天记录和密钥安全吗？**
-答：安全。所有数据只保存在**你自己电脑**的 `~/.dsh` 文件夹里（聊天记录、密钥、配置都在这里），不会上传到任何地方，也不会随安装包分发。
-
-**问：怎么卸载？**
-答：开始菜单 → DeepSeek Harness → 「卸载 DeepSeek Harness」。卸载只删除应用本身，**不会删除**你的数据；想彻底清除数据，再手动删除 `~/.dsh` 文件夹即可。
-
-**问：内置插件没生效？**
-答：插件由桌面端**首次启动**自动注册。如果 3080 端口已有旧的 dsh 实例在跑，插件注册会在下次全新启动 dsh 时加载——重启桌面端即可。
-
-**问：精简版上传文档报"解析库缺失"？**
-答：精简版不带插件依赖。到 `安装目录\plugins\dsh-files` 执行 `npm install`，然后重启桌面端。图片识图（image-input）零依赖，直接可用。
-
-**问：正式版会受专业版影响吗？**
-答：不会。正式版（main / v1.0.0）与专业版（pro-v0.1 / v1.0.0-pro）是独立分支与独立 Release，并存互不覆盖。
-
-**问：看不懂报错怎么办？**
-答：把报错文字截图发到 Issues：<https://github.com/emomg/deepseek-harness-desktop/issues>，会有人帮你。
-
-## 给开发者的补充说明
-
-- `-full` 版自带运行时与插件依赖，普通用户无需安装 Node.js；开发者若想用命令行版，可安装 Node.js ≥ 18 后执行 `npm install -g @deepseek-ai/dsh`，再使用约 4MB 的精简安装包。
-- 精简版插件依赖安装：`cd <安装目录>\plugins\dsh-files && npm install`
-- 功能特性与源码构建：见 [README](README.md)
-- 许可：MIT License，Copyright (c) 2026 DeepSeek
+**Q: 怎么贡献？**
+A: 见根目录 [`AGENTS.md`](AGENTS.md) 的「提交规范」与「PR 要求」。
+所有改动需跑全部门禁 + 全仓测试。

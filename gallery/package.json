@@ -1,0 +1,12 @@
+{
+  "name": "@dsh-desktop/gallery",
+  "version": "0.1.0",
+  "private": true,
+  "description": "dsh-desktop 皮肤画廊静态站：6 款原创极简 editorial 皮肤的展示页。",
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "check": "node scripts/check.mjs"
+  },
+  "license": "MIT"
+}

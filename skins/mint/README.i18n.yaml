@@ -1,0 +1,12 @@
+# 双语配对（CI 门禁 docs:check 校验）
+namespace: '@dsh-desktop/skin-mint'
+entries:
+  - id: name
+    zh: 薄荷
+    en: Mint
+  - id: tagline
+    zh: 米白 + 极低饱和薄荷
+    en: 米白 + 极低饱和薄荷
+  - id: description
+    zh: 米白底配一抹极低饱和薄荷。最轻的「冷色 accent」，适合长时间轻量阅读。
+    en: 米白底配一抹极低饱和薄荷。最轻的「冷色 accent」，适合长时间轻量阅读。

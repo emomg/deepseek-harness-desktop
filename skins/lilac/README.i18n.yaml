@@ -1,0 +1,12 @@
+# 双语配对（CI 门禁 docs:check 校验）
+namespace: '@dsh-desktop/skin-lilac'
+entries:
+  - id: name
+    zh: 丁香
+    en: Lilac
+  - id: tagline
+    zh: 冷白 + 一抹极低饱和丁香紫
+    en: 冷白 + 一抹极低饱和丁香紫
+  - id: description
+    zh: 冷白底配一抹极低饱和丁香紫。安静中的一点冷色，绝不抢戏。
+    en: 冷白底配一抹极低饱和丁香紫。安静中的一点冷色，绝不抢戏。

@@ -1,0 +1,32 @@
+{
+  "name": "@dsh-desktop/skins-all",
+  "version": "0.1.0",
+  "private": true,
+  "description": "dsh-desktop 6 款原创皮肤的聚合 meta-package。一次安装，全部启用。",
+  "type": "module",
+  "main": "build/index.js",
+  "exports": {
+    ".": "./build/index.js",
+    "./registry.json": "./build/registry.json",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "build",
+    "README.md"
+  ],
+  "license": "MIT",
+  "scripts": {
+    "build": "node scripts/aggregate.mjs",
+    "check": "node scripts/aggregate.mjs --check",
+    "test": "node tests/run-all.js"
+  },
+  "dependencies": {
+    "@dsh-desktop/shared": "workspace:*",
+    "@dsh-desktop/skin-bone-white": "workspace:*",
+    "@dsh-desktop/skin-graphite": "workspace:*",
+    "@dsh-desktop/skin-paper": "workspace:*",
+    "@dsh-desktop/skin-mist": "workspace:*",
+    "@dsh-desktop/skin-lilac": "workspace:*",
+    "@dsh-desktop/skin-mint": "workspace:*"
+  }
+}

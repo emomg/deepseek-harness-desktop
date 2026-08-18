@@ -1,0 +1,74 @@
+name: release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  verify-and-publish:
+    name: Verify and publish
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.9.0
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Version check
+        run: pnpm verify:version "${GITHUB_REF_NAME#v}"
+        env:
+          GITHUB_REF_NAME: ${{ github.ref_name }}
+
+      - name: All gates
+        run: |
+          pnpm typecheck
+          pnpm test
+          pnpm skin-center:check
+          pnpm aggregate:check
+          pnpm gallery:check
+          pnpm docs:check
+
+      - name: Generate release notes
+        id: notes
+        run: |
+          PREV=$(git tag --sort=-version:refname | grep -v "^${GITHUB_REF_NAME}$" | head -n1 || echo "")
+          if [ -z "$PREV" ]; then
+            pnpm release:notes "v0.0.0" "$GITHUB_REF_NAME" > /tmp/notes.md || true
+          else
+            pnpm release:notes "$PREV" "$GITHUB_REF_NAME" > /tmp/notes.md
+          fi
+          echo "notes<<EOF" >> "$GITHUB_OUTPUT"
+          cat /tmp/notes.md >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
+
+      - name: Publish npm packages (in dependency order)
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          # shared 必须先发，其它包依赖它
+          pnpm --filter @dsh-desktop/shared publish --no-git-checks --access public || true
+          for pkg in @dsh-desktop/skin-bone-white @dsh-desktop/skin-graphite @dsh-desktop/skin-paper @dsh-desktop/skin-mist @dsh-desktop/skin-lilac @dsh-desktop/skin-mint @dsh-desktop/skin-center @dsh-desktop/skins-all; do
+            pnpm --filter "$pkg" publish --no-git-checks --access public || true
+          done
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          body: ${{ steps.notes.outputs.notes }}
+          generate_release_notes: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

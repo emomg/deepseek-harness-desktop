@@ -1,107 +1,123 @@
-# DeepSeek Harness Pro（专业版）设计文档 v3
+# dsh-desktop 专业版设计文档
 
-> **设计原则（用户确认）：不完全仿照 VS Code，是 DeepSeek Harness 对于 IDE 的延伸。
-> 专业版 = DSH 自身的插件扩展；桌面壳只做窗口容器。**
+> 桌面端 + 插件 + 皮肤系统 = dsh-desktop（v2 深度 monorepo 化）
 
----
+## 1. 范围
 
-## 0. 架构（v3：插件版）
+v2 的"专业版"由三部分组成：
+
+1. **桌面端**：`apps/desktop/` —— Tauri 2 + Rust，Windows 原生窗口，加载 DSH Web UI
+2. **DSH 插件**：`plugins/dsh-pro`、`plugins/dsh-files`、`plugins/dsh-plugin-image-input`
+3. **皮肤系统**：`skins/skin-center` + 6 款独立皮肤包 + 聚合 `dsh-skins` + 共享 `shared/`
+
+## 2. 三层架构
 
 ```
-┌─ dsh-desktop.exe（桌面壳，Rust）─────────────────────────────┐
-│  主窗口 → 加载 DSH Web UI（http://127.0.0.1:3080）            │
-│  dsh 生命周期（拉起/退出清理）/ 托盘 / 桌面版自更新（可关）      │
-└────────────────────────────────────────────────────────────┘
-┌─ DSH Web UI（3080，dsh web 进程）───────────────────────────┐
-│  ┌─ @dsh-pro/desktop · 宿主插件（Node，dsh 进程内）──────────┐ │
-│  │  档案 = DSH 工作区（目录=文件区 + 会话=对话区）             │ │
-│  │  版本管理：快照/列表/回滚/删除（/api/pro/* 路由）            │ │
-│  └────────────────────────────────────────────────────────┘ │
-│  ┌─ @dsh-pro/desktop · 客户端插件（注入 DSH 原生 UI）─────────┐ │
-│  │  侧边栏「项目控制器」入口+面板（sidebar.footer.action）      │ │
-│  │  会话头部：快照 / 版本 / 上传（header.actions）             │ │
-│  └────────────────────────────────────────────────────────┘ │
-└────────────────────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────┐
+│ DSH web UI (port 3080)                                 │
+│ ├── 注入 cordis 插件 (3 个)                            │
+│ │   ├── dsh-pro     任务模板/仪表盘/摘要/评审         │
+│ │   ├── dsh-files   文件上传 + read_document           │
+│ │   ├── dsh-image-input  图片粘贴 + 视觉识图          │
+│ │   └── skin-center 皮肤中心 GUI 卡                   │
+│ └── 皮肤注册表 (来自 @dsh-desktop/shared)              │
+│     ├── bone-white / graphite / paper / mist          │
+│     ├── lilac / mint (6 款极简 editorial)             │
+└────────────────────────────────────────────────────────┘
+                            ▲
+                            │ 加载 http://127.0.0.1:3080
+                            │
+┌────────────────────────────────────────────────────────┐
+│ apps/desktop (Tauri 2 + Rust)                          │
+│ ├── 窗口/托盘/端口探测/dsh 拉起                        │
+│ └── 首次启动自动注册 plugins/ 三个插件                 │
+└────────────────────────────────────────────────────────┘
 ```
 
-- **不做**：独立 IDE 页面、iframe 包裹、第二套项目注册表、壳内嵌 HTTP 前端。
-- **数据模型**：项目档案 = DSH 工作区。文件区 = 工作区目录；对话区 = 该工作区会话
-  （`~/.dsh/sessions/<编码目录>/`，按工作区归档，天然分组）。版本 = 文件快照 + 对话快照。
-- **上传**：客户端先**询问**（是否上传 + 上传什么：文件区/对话区/两者）→ 打包 → v2 接 GitHub Releases。
+## 3. 数据流：皮肤应用
 
-## 1. 插件包（desktop-app/pro-plugin/，@dsh-pro/desktop）
+1. dsh web 启动 → 加载 cordis 插件
+2. `@dsh-desktop/skin-bone-white`（等 6 款）执行 `register(skinMeta)` 写入共享注册表
+3. `@dsh-desktop/skin-center` 渲染设置卡 → 调 `list()` 拿到全部 6 款
+4. 用户点「应用」→ 调 `apply(skin)`：完整覆写 18 个 CSS token 到 `<html style>`，设 `data-dsh-skin` 属性
+5. CSS 规则 `var(--dsh-*)` 全局生效
+6. 选中的皮肤 id 持久化到 `localStorage['dsh-desktop.skin.v1']`
 
-| 文件 | 职责 |
-|---|---|
-| `lib/index.js` | 宿主插件：档案/版本服务 + `/api/pro/*` 路由（webServer 注册） |
-| `lib/version.js` | 版本核心（Node 移植，语义与 Rust SNAPCHECK 一致，已无头测试 18 项通过） |
-| `lib/client.js` | 客户端插件（手写 `__ModuleLoader__.load` 格式，React，无构建） |
-| `cordis.patch.yml` | 插入插件行 `{id: dsh-pro, name: '@dsh-pro/desktop'}` |
-| `package.json` | `dsh.bundle.patch` + `dsh.client` 元数据 + peer deps |
-| `test/version.test.js` | 版本核心无头测试（18 项） |
-| `test/host.test.js` | 宿主插件 mock-ctx 路由测试（12 项） |
+试穿 (try-on) 不持久化：进入卡时拍快照，离开卡或点「退出试穿」完全还原。
 
-### 宿主端
-- 复用 DSH 原生模型：`ctx.workspaceRegistry`（工作区 + sessionIds）+ `ctx.webServer`（路由）。
-- 路由（同源 3080，客户端直接 fetch）：
-  - `GET /api/pro/archives` 项目控制器数据
-  - `GET /api/pro/archive?sessionId=` 会话所在档案
-  - `POST /api/pro/snapshot` `{sessionId|path, semver?, message?}`
-  - `POST /api/pro/restore` `{path, versionId}`
-  - `DELETE /api/pro/version` `{path, versionId}`
-  - `POST /api/pro/upload` `{path, include}`（询问后的打包；v2 接 GitHub）
-- 数据目录：`%LOCALAPPDATA%\DeepSeek Harness Pro\data`（`DSH_PRO_DATA_DIR` 可覆盖）。
+## 4. 6 款皮肤设计
 
-### 客户端端（Slot 注入，DSH 原生观感，自动继承主题 token）
-- `sidebar.footer.action`：「项目控制器」入口按钮 + 面板（档案列表 → 选中档案的版本时间线
-  → 打快照/回滚/删除/上传（含"上传什么"选择））。
-- `conversation.session.header.actions`：会话头部「快照 / 版本 / 上传」按钮。
-- 数据：同源 fetch `/api/pro/*`；无跨域、无桥接、无自建服务。
+设计参考：[`docs/skin-design-guide.md`](docs/skin-design-guide.md)
 
-## 2. 版本快照规则（与已验证语义一致）
+| id          | 调子            | accent  | 何时用                          |
+| ----------- | --------------- | ------- | ------------------------------- |
+| `bone-white` | cool + ink      | #1a1a1a | 默认（最克制）                  |
+| `graphite`   | cool + ink      | #0e0e0e | 想更专注                        |
+| `paper`      | warm + vermilion| #b8434a | 长读 / 写作                      |
+| `mist`       | cool blue-gray  | #0c1014 | 雨意 / 安静                      |
+| `lilac`      | cool + lilac    | #7a6592 | 想要一抹低饱和色                |
+| `mint`       | cream + mint    | #5e9275 | 轻量阅读 / 不抢戏                |
 
-- 忽略清单：`.git node_modules target dist build out .venv venv __pycache__ .idea .vscode *.log *.tmp *.cache`
-- semver：用户输入或自动 +0.0.1；同版本多次用 seq 区分（`0.3.1-2`）
-- 快照：文件区完整复制 + 对话区（会话 jsonl.zstd）复制 → `versions/<key>/vX.Y.Z-seq/` + `manifest.json`
-- 回滚：先自动备份当前状态为 `.pre-restore-<ts>`，再覆盖文件区与对话区
-  （对话区还原需刷新/重启 dsh 完全生效）
+每款皮肤是一个独立 npm 包 `@dsh-desktop/skin-<id>`，含：
 
-## 3. 桌面壳（Tauri，职责收窄）
+- `skin.json` —— 元数据 + 18 token
+- `cordis.patch.yml` —— dsh 注册
+- `lib/{index,client}.js` —— host stub + browser register
+- `preview/light.svg` + `dark.svg` —— 预览图
+- `README.md` + `README.zh.md` + `README.i18n.yaml` —— 双语 + i18n 配对
 
-- 主窗口：占位页 → 导航 `http://127.0.0.1:3080`
-- 托盘：显示主窗口 / 检查更新 / 退出；`DSH_PRO_DISABLE_UPDATE=1` 关启动更新检查
-- dsh 拉起/端口检测/退出清理（沿用）；**无** IDE 服务/版本逻辑/窗口桥接
-- 代码：`src-tauri/src/lib.rs`（单文件），`dist/index.html` 仅启动占位页
+## 5. 共享层：`shared/`
 
-## 4. 安装与验证
+`@dsh-desktop/shared` 是无依赖的纯 JS 库：
 
-```powershell
-# 1. 无头测试
-node pro-plugin\test\version.test.js   # 18 项
-node pro-plugin\test\host.test.js      # 12 项
+- `skin-schema.js` —— 18 token 校验 + `validateSkin` / `validateRegistry`
+- `css-tokens.js` —— 18 token 默认值 + `writeVars` / `readVars` / `installDefaultTokens`
+- `registry.js` —— 浏览器端 `register` / `list` / `get` 注册表
 
-# 2. 安装到 web profile（自动追加 dsh.profile.bundles）
-dsh plugin --profile web add link:D:\dsh\desktop-app\pro-plugin
+被 `@dsh-desktop/skin-center` 和 6 款皮肤包共同依赖。
 
-# 3. 确认组合层（无需重启）
-dsh --profile web --dump-config | Select-String dsh-pro
+## 6. CI 门禁
 
-# 4. 重启 dsh web（或重启桌面端）→ 侧边栏出现「项目控制器」，会话头部出现 快照/版本/上传
-```
+- `pnpm typecheck` —— JS 语法检查（51 个文件）
+- `pnpm test` —— 全仓测试（24 个测试）
+- `pnpm skin-center:check` —— 6 款皮肤 schema 校验
+- `pnpm aggregate:check` —— `dsh-skins` 聚合包产物与 `skins/` 一致
+- `pnpm gallery:check` —— 画廊与 registry 一致
+- `pnpm docs:check` —— 双语文档 / i18n.yaml 配对
 
-已实测：组合树包含 `- id: dsh-pro, name: '@dsh-pro/desktop'`；安装包已 link 进 profile。
+## 7. 安全
 
-## 5. 二期
+- **不收集、不上传任何数据**；摘要/模板/评审记录只存本机 Pro 数据目录
+  （`DSH_PRO_DATA_DIR` 或 `%LOCALAPPDATA%\DeepSeek Harness Pro\data`）
+- **不写 DSH 会话日志**（DSH 持久化拒绝未知事件类型）
+- 评审的拒绝/放弃会真实改动工作区文件（git checkout / 恢复基线），提交才执行 git commit
+- git 命令数组传参（无 shell 注入）
+- 桌面端是本地壳，不联网就能用；联网后只走 dsh web 已有的网络栈
 
-- GitHub 上传落地：token 配置（设置分区）、创建 release + 上传 zip（复用在桌面版更新器里验证过的 node fetch + SHA256 模式）
-- 快照对比/增量、忽略清单可配置（设置分区）
-- 会话头部按钮接入 RPC（dsh-host-apiproxy）替代轮询
+## 8. 测试与文档
 
-## 6. 风险与对策
+- 全仓测试：`pnpm test`（6 个套件，24 个测试）
+- 架构与 API 契约：[`AGENTS.md`](AGENTS.md) + [`docs/development.md`](docs/development.md)
+- 皮肤设计指南：[`docs/skin-design-guide.md`](docs/skin-design-guide.md)
+- i18n 规范：[`docs/i18n.md`](docs/i18n.md)
+- 新手安装与使用：[`start.md`](start.md)
 
-| 风险 | 对策 |
-|---|---|
-| 客户端插件 loader 格式 | 照抄已装插件的 rolldown shim + 语法已通过 node --check；运行时需重启验证 |
-| 对话区编码目录 | `--D-dsh--` 规则已验证；快照时目录不存在则优雅降级（dialogCount=0） |
-| 会话热回滚 | 文档明示需刷新/重启 dsh 完全生效 |
-| 沙箱/权限 | 安装步骤需对 %USERPROFILE%\.dsh 与 pnpm store 有写权限 |
+## 9. 与 v1 的差异（迁移指南）
+
+v1 → v2 主要变化：
+
+| v1                             | v2                                                                 |
+| ------------------------------ | ------------------------------------------------------------------ |
+| 11 款硬编码皮肤（pro-plugin）  | 6 款独立包 + 共享注册表 + skin-center 独立包                       |
+| 单包 Tauri 仓库                | pnpm monorepo（apps / plugins / skins / shared / dsh-skins）       |
+| 皮肤中心 UI 嵌在 pro-plugin    | 独立 `@dsh-desktop/skin-center` 插件                                |
+| 单一 README                    | 仓库级 AGENTS.md + 包 README 三件套 + docs/ 长期文档               |
+| 无 CI 门禁                     | 6 个门禁脚本 + GitHub Actions                                       |
+| `--dsw-alias-*` 旧 token       | 18 个 `--dsh-*` token（更收敛）                                     |
+
+迁移步骤：
+
+1. 拉新代码：`git fetch && git checkout v2.x`
+2. 装依赖：`pnpm install`
+3. dsh 重启一次（让 cordis 重新注册 3 个插件 + skin-center + 6 款皮肤）
+4. 旧的 11 款硬编码皮肤设置会被自动忽略——在皮肤中心选择 6 款新皮肤的任意一款即可

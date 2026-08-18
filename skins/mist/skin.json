@@ -1,0 +1,34 @@
+{
+  "id": "mist",
+  "name": "雾",
+  "nameEn": "Mist",
+  "tagline": "冷感湿润 · 雨意蓝灰 + 墨黑",
+  "description": "近冷蓝灰的雨意底色 + 强对比墨黑。安静、专注、不抢戏。",
+  "tags": [
+    "light",
+    "minimal",
+    "editorial",
+    "cool"
+  ],
+  "order": 4,
+  "vars": {
+    "--dsh-bg-primary": "#eef0f2",
+    "--dsh-bg-secondary": "#dfe2e6",
+    "--dsh-bg-elevated": "#f6f7f8",
+    "--dsh-fg-primary": "#0c1014",
+    "--dsh-fg-secondary": "#2c333b",
+    "--dsh-fg-tertiary": "#5b6770",
+    "--dsh-fg-disabled": "#8a949c",
+    "--dsh-border": "rgba(12, 16, 20, 0.08)",
+    "--dsh-border-strong": "rgba(12, 16, 20, 0.16)",
+    "--dsh-accent": "#0c1014",
+    "--dsh-accent-fg": "#ffffff",
+    "--dsh-glass-bg": "rgba(238, 240, 242, 0.80)",
+    "--dsh-glass-border": "rgba(12, 16, 20, 0.08)",
+    "--dsh-glass-blur": 26,
+    "--dsh-shadow": "0 1px 2px rgba(12,16,20,.05), 0 8px 28px rgba(12,16,20,.06)",
+    "--dsh-glow-1": "rgba(60, 90, 140, 0.05)",
+    "--dsh-glow-2": "rgba(60, 90, 140, 0.025)",
+    "--dsh-mode": "light"
+  }
+}

@@ -1,0 +1,213 @@
+{
+  "version": 1,
+  "generated": "2026-08-18T06:01:08.320Z",
+  "count": 6,
+  "skins": [
+    {
+      "id": "bone-white",
+      "name": "骨白",
+      "nameEn": "Bone White",
+      "tagline": "冷白底 + 大量负空间 + 一抹墨黑",
+      "description": "极简 clean editorial 基线：冷白底配上一抹墨黑，大量负空间留给工作本身。默认皮肤，最克制的入门。",
+      "tags": [
+        "light",
+        "minimal",
+        "editorial",
+        "default"
+      ],
+      "order": 1,
+      "vars": {
+        "--dsh-bg-primary": "#fafaf7",
+        "--dsh-bg-secondary": "#f3f1ec",
+        "--dsh-bg-elevated": "#ffffff",
+        "--dsh-fg-primary": "#1a1a1a",
+        "--dsh-fg-secondary": "#4a4a48",
+        "--dsh-fg-tertiary": "#8a8a86",
+        "--dsh-fg-disabled": "#b8b8b4",
+        "--dsh-border": "rgba(0, 0, 0, 0.06)",
+        "--dsh-border-strong": "rgba(0, 0, 0, 0.12)",
+        "--dsh-accent": "#1a1a1a",
+        "--dsh-accent-fg": "#ffffff",
+        "--dsh-glass-bg": "rgba(250, 250, 247, 0.78)",
+        "--dsh-glass-border": "rgba(0, 0, 0, 0.06)",
+        "--dsh-glass-blur": 22,
+        "--dsh-shadow": "0 1px 2px rgba(0,0,0,.04), 0 8px 24px rgba(0,0,0,.04)",
+        "--dsh-glow-1": "rgba(0, 0, 0, 0.03)",
+        "--dsh-glow-2": "rgba(0, 0, 0, 0.015)",
+        "--dsh-mode": "light"
+      }
+    },
+    {
+      "id": "graphite",
+      "name": "石墨",
+      "nameEn": "Graphite",
+      "tagline": "极简灰阶 + 一抹墨黑 + 高对比",
+      "description": "更深的冷灰底 + 强对比。编辑工作、文字密集、想集中注意力时的默认。",
+      "tags": [
+        "light",
+        "minimal",
+        "editorial",
+        "focus"
+      ],
+      "order": 2,
+      "vars": {
+        "--dsh-bg-primary": "#ececeb",
+        "--dsh-bg-secondary": "#dededd",
+        "--dsh-bg-elevated": "#f4f4f3",
+        "--dsh-fg-primary": "#0e0e0e",
+        "--dsh-fg-secondary": "#3a3a3a",
+        "--dsh-fg-tertiary": "#6e6e6e",
+        "--dsh-fg-disabled": "#a4a4a4",
+        "--dsh-border": "rgba(0, 0, 0, 0.10)",
+        "--dsh-border-strong": "rgba(0, 0, 0, 0.18)",
+        "--dsh-accent": "#0e0e0e",
+        "--dsh-accent-fg": "#ffffff",
+        "--dsh-glass-bg": "rgba(236, 236, 235, 0.82)",
+        "--dsh-glass-border": "rgba(0, 0, 0, 0.10)",
+        "--dsh-glass-blur": 24,
+        "--dsh-shadow": "0 1px 2px rgba(0,0,0,.06), 0 8px 28px rgba(0,0,0,.06)",
+        "--dsh-glow-1": "rgba(0, 0, 0, 0.04)",
+        "--dsh-glow-2": "rgba(0, 0, 0, 0.02)",
+        "--dsh-mode": "light"
+      }
+    },
+    {
+      "id": "lilac",
+      "name": "丁香",
+      "nameEn": "Lilac",
+      "tagline": "冷白 + 一抹极低饱和丁香紫",
+      "description": "冷白底配一抹极低饱和丁香紫。安静中的一点冷色，绝不抢戏。",
+      "tags": [
+        "light",
+        "minimal",
+        "editorial",
+        "cool",
+        "accent"
+      ],
+      "order": 5,
+      "vars": {
+        "--dsh-bg-primary": "#f7f5f8",
+        "--dsh-bg-secondary": "#ece8ef",
+        "--dsh-bg-elevated": "#fdfcfe",
+        "--dsh-fg-primary": "#1c1820",
+        "--dsh-fg-secondary": "#4a4350",
+        "--dsh-fg-tertiary": "#857d8c",
+        "--dsh-fg-disabled": "#b3acb8",
+        "--dsh-border": "rgba(28, 24, 32, 0.07)",
+        "--dsh-border-strong": "rgba(28, 24, 32, 0.14)",
+        "--dsh-accent": "#7a6592",
+        "--dsh-accent-fg": "#ffffff",
+        "--dsh-glass-bg": "rgba(247, 245, 248, 0.80)",
+        "--dsh-glass-border": "rgba(28, 24, 32, 0.07)",
+        "--dsh-glass-blur": 22,
+        "--dsh-shadow": "0 1px 2px rgba(28,24,32,.04), 0 8px 24px rgba(28,24,32,.04)",
+        "--dsh-glow-1": "rgba(122, 101, 146, 0.06)",
+        "--dsh-glow-2": "rgba(122, 101, 146, 0.03)",
+        "--dsh-mode": "light"
+      }
+    },
+    {
+      "id": "mint",
+      "name": "薄荷",
+      "nameEn": "Mint",
+      "tagline": "米白 + 极低饱和薄荷",
+      "description": "米白底配一抹极低饱和薄荷。最轻的「冷色 accent」，适合长时间轻量阅读。",
+      "tags": [
+        "light",
+        "minimal",
+        "editorial",
+        "cool",
+        "accent"
+      ],
+      "order": 6,
+      "vars": {
+        "--dsh-bg-primary": "#f4f6f3",
+        "--dsh-bg-secondary": "#e5ebe4",
+        "--dsh-bg-elevated": "#fbfcf9",
+        "--dsh-fg-primary": "#141a16",
+        "--dsh-fg-secondary": "#3c4540",
+        "--dsh-fg-tertiary": "#737e76",
+        "--dsh-fg-disabled": "#a5aea6",
+        "--dsh-border": "rgba(20, 26, 22, 0.07)",
+        "--dsh-border-strong": "rgba(20, 26, 22, 0.14)",
+        "--dsh-accent": "#5e9275",
+        "--dsh-accent-fg": "#ffffff",
+        "--dsh-glass-bg": "rgba(244, 246, 243, 0.80)",
+        "--dsh-glass-border": "rgba(20, 26, 22, 0.07)",
+        "--dsh-glass-blur": 22,
+        "--dsh-shadow": "0 1px 2px rgba(20,26,22,.04), 0 8px 24px rgba(20,26,22,.04)",
+        "--dsh-glow-1": "rgba(94, 146, 117, 0.06)",
+        "--dsh-glow-2": "rgba(94, 146, 117, 0.03)",
+        "--dsh-mode": "light"
+      }
+    },
+    {
+      "id": "mist",
+      "name": "雾",
+      "nameEn": "Mist",
+      "tagline": "冷感湿润 · 雨意蓝灰 + 墨黑",
+      "description": "近冷蓝灰的雨意底色 + 强对比墨黑。安静、专注、不抢戏。",
+      "tags": [
+        "light",
+        "minimal",
+        "editorial",
+        "cool"
+      ],
+      "order": 4,
+      "vars": {
+        "--dsh-bg-primary": "#eef0f2",
+        "--dsh-bg-secondary": "#dfe2e6",
+        "--dsh-bg-elevated": "#f6f7f8",
+        "--dsh-fg-primary": "#0c1014",
+        "--dsh-fg-secondary": "#2c333b",
+        "--dsh-fg-tertiary": "#5b6770",
+        "--dsh-fg-disabled": "#8a949c",
+        "--dsh-border": "rgba(12, 16, 20, 0.08)",
+        "--dsh-border-strong": "rgba(12, 16, 20, 0.16)",
+        "--dsh-accent": "#0c1014",
+        "--dsh-accent-fg": "#ffffff",
+        "--dsh-glass-bg": "rgba(238, 240, 242, 0.80)",
+        "--dsh-glass-border": "rgba(12, 16, 20, 0.08)",
+        "--dsh-glass-blur": 26,
+        "--dsh-shadow": "0 1px 2px rgba(12,16,20,.05), 0 8px 28px rgba(12,16,20,.06)",
+        "--dsh-glow-1": "rgba(60, 90, 140, 0.05)",
+        "--dsh-glow-2": "rgba(60, 90, 140, 0.025)",
+        "--dsh-mode": "light"
+      }
+    },
+    {
+      "id": "paper",
+      "name": "宣纸",
+      "nameEn": "Paper",
+      "tagline": "米白 + 朱砂一抹（暖底冷顶）",
+      "description": "略带暖意的米白底，配一抹朱砂色 accent。最有手感的「纸」，适合长读与写作。",
+      "tags": [
+        "light",
+        "minimal",
+        "editorial",
+        "warm"
+      ],
+      "order": 3,
+      "vars": {
+        "--dsh-bg-primary": "#f5efe5",
+        "--dsh-bg-secondary": "#ebe4d6",
+        "--dsh-bg-elevated": "#fbf8f0",
+        "--dsh-fg-primary": "#1f1b16",
+        "--dsh-fg-secondary": "#524a3e",
+        "--dsh-fg-tertiary": "#8a7f6e",
+        "--dsh-fg-disabled": "#b6ad9c",
+        "--dsh-border": "rgba(31, 27, 22, 0.08)",
+        "--dsh-border-strong": "rgba(31, 27, 22, 0.16)",
+        "--dsh-accent": "#b8434a",
+        "--dsh-accent-fg": "#ffffff",
+        "--dsh-glass-bg": "rgba(245, 239, 229, 0.80)",
+        "--dsh-glass-border": "rgba(31, 27, 22, 0.08)",
+        "--dsh-glass-blur": 22,
+        "--dsh-shadow": "0 1px 2px rgba(31,27,22,.05), 0 8px 24px rgba(31,27,22,.05)",
+        "--dsh-glow-1": "rgba(184, 67, 74, 0.08)",
+        "--dsh-glow-2": "rgba(184, 67, 74, 0.04)",
+        "--dsh-mode": "light"
+      }
+    }
+  ]
+}

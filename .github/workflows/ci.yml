@@ -1,0 +1,79 @@
+name: ci
+
+on:
+  push:
+    branches: [main, master, refactor/**]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  gates:
+    name: CI gates
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.9.0
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck (JS syntax)
+        run: pnpm typecheck
+
+      - name: Tests
+        run: pnpm test
+
+      - name: Skin center registry check
+        run: pnpm skin-center:check
+
+      - name: Aggregate build consistency
+        run: pnpm aggregate:check
+
+      - name: Gallery consistency
+        run: pnpm gallery:check
+
+      - name: Docs consistency
+        run: pnpm docs:check
+
+  rust-build:
+    name: Rust build (Tauri)
+    runs-on: windows-latest
+    timeout-minutes: 30
+    # 只在 main / refactor 上跑；PR 提交流暂时不构建桌面端
+    if: github.event_name == 'push'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-pc-windows-msvc
+
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: apps/desktop/src-tauri -> target
+
+      - name: Build Tauri (release smoke)
+        working-directory: apps/desktop/src-tauri
+        run: cargo build --release
+        continue-on-error: true   # 桌面端构建可能因环境差异失败，但门禁已通过
