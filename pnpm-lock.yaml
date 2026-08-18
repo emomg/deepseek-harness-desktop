@@ -45,6 +45,10 @@ importers:
       read-excel-file:
         specifier: ^5.8.7
         version: 5.8.8
+    devDependencies:
+      jszip:
+        specifier: ^3.10.1
+        version: 3.10.1
 
   plugins/dsh-plugin-image-input: {}
 
