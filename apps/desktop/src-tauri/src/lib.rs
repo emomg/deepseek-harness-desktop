@@ -232,10 +232,11 @@ fn confirm_update_dialog(title: &str, message: &str) -> bool {
 
 /// 执行一次完整检查：拉取最新 release，比较版本；有新版本时询问是否自动下载安装。
 /// 在线程里调用（不阻塞 UI）；安装完成后退出当前应用并启动新版。
+/// `manual` 为 true（托盘手动触发）时，无论结果都弹窗反馈；自动启动检查只在
+/// 发现新版本时才打扰用户。
 #[cfg(windows)]
-fn run_update_check(app: tauri::AppHandle) {
+fn run_update_check(app: tauri::AppHandle, manual: bool) {
     let current = APP_VERSION.to_string();
-    // 当前是 -full 自包含版（exe 同级有 runtime）则更新 full 安装包，否则更新精简版。
     // 当前安装的版本变体：安装包在 exe 同级写 edition.txt（lite / full / pro）。
     // 读不到时按旧逻辑推断：有捆绑运行时视为 full，否则 lite。
     let edition = current_edition().unwrap_or_else(|| {
@@ -247,20 +248,24 @@ fn run_update_check(app: tauri::AppHandle) {
     });
     match fetch_latest_release(&edition) {
         None => {
-            show_update_dialog(
-                "检查更新",
-                &format!(
-                    "无法连接 GitHub 检查更新（网络不可用或 node 缺失）。
+            if manual {
+                show_update_dialog(
+                    "检查更新",
+                    &format!(
+                        "无法连接 GitHub 检查更新（网络不可用或 node 缺失）。
 
 当前版本：v{current}
 可手动访问：
 {UPDATE_PAGE_URL}"
-                ),
-            );
+                    ),
+                );
+            }
         }
         Some((tag, _url, asset_url, digest)) => {
             if !is_newer(&tag, &current) {
-                show_update_dialog("检查更新", &format!("当前已是最新版本 v{current}。"));
+                if manual {
+                    show_update_dialog("检查更新", &format!("当前已是最新版本 v{current}。"));
+                }
                 return;
             }
             let msg = format!(
@@ -676,7 +681,7 @@ pub fn run() {
                 let handle = app.handle().clone();
                 std::thread::spawn(move || {
                     std::thread::sleep(Duration::from_secs(5));
-                    run_update_check(handle);
+                    run_update_check(handle, false);
                 });
             }
 
@@ -722,7 +727,7 @@ pub fn run() {
                 .on_menu_event(|app, event| match event.id.as_ref() {
                     "update-check" => {
                         let handle = app.clone();
-                        std::thread::spawn(move || run_update_check(handle));
+                        std::thread::spawn(move || run_update_check(handle, true));
                     }
                     "show" => {
                         if let Some(w) = app.get_webview_window("main") {
