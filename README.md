@@ -1,5 +1,5 @@
 # DeepSeek Harness Desktop
-**等官方进一步更新再重新考虑方向从哪走，急需桌面端的请用高star的桌面端**
+**等官方进一步更新再重新考虑方向从哪走，急需桌面端的请用其他高star的桌面端**
 
 Native Windows desktop client for [deepseek-ai/deepseek-harness](https://github.com/deepseek-ai/deepseek-harness)
 plus a monorepo of DSH cordis plugins and 6 original minimal editorial skins.
